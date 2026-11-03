@@ -10,6 +10,8 @@ node_modules/
 *.mkv
 *.wav
 *.mp3
+!resources/音效-资源库/**
+!resources/音乐-资源库/**
 *.png
 *.jpg
 *.jpeg

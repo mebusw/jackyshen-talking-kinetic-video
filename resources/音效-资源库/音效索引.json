@@ -1,0 +1,266 @@
+{
+ "version": "2.0",
+ "updated": "2026-11-03",
+ "root": "/Users/jacky/Library/CloudStorage/坚果云-jackyshen@uperform.cn/优普丰大文件(默认不同步到本地)/02 通用市场开拓/05 市场运营活动/28 短视频策划/短视频脚本策划稿/随意口播系列/引擎-模板/resources/音效-资源库",
+ "policy": {
+  "source": "剪映官方音效（用户挑选，唯一内置来源）",
+  "rule": "任何视频项目的音效一律从本库取用；禁止用正弦/包络等程序合成音效替代真实录音",
+  "priority": "本库（剪映音效）为唯一首选；需要新音效时先告知用户，确认后用 Mixkit 直链下载并入本库",
+  "mix_dbfs": {
+   "voice": -16,
+   "bed": "-26 ~ -30",
+   "accent": -18
+  },
+  "max_accent_per_60s": 3
+ },
+ "count": {
+  "total": 28,
+  "unique": 20
+ },
+ "categories": {
+  "开篇音效": {
+   "tip": "片子最前 3 秒用；短、脆、有记忆点",
+   "use": [
+    "开场 hook",
+    "大鼓/号角式开场"
+   ],
+   "items": [
+    {
+     "file": "剪映音效/开篇音效/01_开篇音效.mp3",
+     "name": "01_开篇音效.mp3",
+     "dur_s": 1.18,
+     "peak_dbfs": -4.4,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/开篇音效/02_开篇音效.mp3",
+     "name": "02_开篇音效.mp3",
+     "dur_s": 1.13,
+     "peak_dbfs": 0.0,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/开篇音效/03_开篇音效.mp3",
+     "name": "03_开篇音效.mp3",
+     "dur_s": 0.42,
+     "peak_dbfs": -3.4,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/开篇音效/04_开篇音效.mp3",
+     "name": "04_开篇音效.mp3",
+     "dur_s": 0.65,
+     "peak_dbfs": -5.3,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/开篇音效/05_开篇音效.mp3",
+     "name": "05_开篇音效.mp3",
+     "dur_s": 1.51,
+     "peak_dbfs": -3.9,
+     "dup_of": null
+    }
+   ]
+  },
+  "提示音": {
+   "tip": "信息落点 / 切换提示；音量要轻，当标点用",
+   "use": [
+    "信息落点 click/pop",
+    "打字/计时 tick",
+    "轻确认 ding"
+   ],
+   "items": [
+    {
+     "file": "剪映音效/提示音/06_提示音.mp3",
+     "name": "06_提示音.mp3",
+     "dur_s": 0.55,
+     "peak_dbfs": -12.2,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/提示音/07_提示音.mp3",
+     "name": "07_提示音.mp3",
+     "dur_s": 1.1,
+     "peak_dbfs": -5.1,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/提示音/08_提示音.mp3",
+     "name": "08_提示音.mp3",
+     "dur_s": 1.54,
+     "peak_dbfs": -6.9,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/提示音/09_提示音.mp3",
+     "name": "09_提示音.mp3",
+     "dur_s": 1.67,
+     "peak_dbfs": -0.3,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/提示音/10_提示音.mp3",
+     "name": "10_提示音.mp3",
+     "dur_s": 1.67,
+     "peak_dbfs": -0.3,
+     "dup_of": "09_提示音.mp3"
+    },
+    {
+     "file": "剪映音效/提示音/11_提示音.mp3",
+     "name": "11_提示音.mp3",
+     "dur_s": 0.41,
+     "peak_dbfs": -0.3,
+     "dup_of": null
+    }
+   ]
+  },
+  "重点强调": {
+   "tip": "强调某一句话或一个数字；整条片最多用 3 次",
+   "use": [
+    "重点重音 stamp",
+    "强调/落定 impact"
+   ],
+   "items": [
+    {
+     "file": "剪映音效/重点强调/12_重点强调.mp3",
+     "name": "12_重点强调.mp3",
+     "dur_s": 0.39,
+     "peak_dbfs": -8.1,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/重点强调/13_重点强调.mp3",
+     "name": "13_重点强调.mp3",
+     "dur_s": 1.28,
+     "peak_dbfs": 0.0,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/重点强调/14_重点强调.mp3",
+     "name": "14_重点强调.mp3",
+     "dur_s": 0.57,
+     "peak_dbfs": -0.8,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/重点强调/15_重点强调.mp3",
+     "name": "15_重点强调.mp3",
+     "dur_s": 0.37,
+     "peak_dbfs": 0.0,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/重点强调/16_重点强调.mp3",
+     "name": "16_重点强调.mp3",
+     "dur_s": 0.37,
+     "peak_dbfs": 0.0,
+     "dup_of": "15_重点强调.mp3"
+    },
+    {
+     "file": "剪映音效/重点强调/17_重点强调.mp3",
+     "name": "17_重点强调.mp3",
+     "dur_s": 0.44,
+     "peak_dbfs": -3.6,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/重点强调/18_重点强调.mp3",
+     "name": "18_重点强调.mp3",
+     "dur_s": 0.44,
+     "peak_dbfs": -3.6,
+     "dup_of": "17_重点强调.mp3"
+    }
+   ]
+  },
+  "转场音效": {
+   "tip": "段落之间的切换；配合画面动效",
+   "use": [
+    "转场 whoosh",
+    "段落切换 riser"
+   ],
+   "items": [
+    {
+     "file": "剪映音效/转场音效/19_转场音效.mp3",
+     "name": "19_转场音效.mp3",
+     "dur_s": 0.47,
+     "peak_dbfs": -8.6,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/转场音效/20_转场音效.mp3",
+     "name": "20_转场音效.mp3",
+     "dur_s": 0.89,
+     "peak_dbfs": -6.2,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/转场音效/21_转场音效.mp3",
+     "name": "21_转场音效.mp3",
+     "dur_s": 0.89,
+     "peak_dbfs": -6.2,
+     "dup_of": "20_转场音效.mp3"
+    },
+    {
+     "file": "剪映音效/转场音效/22_转场音效.mp3",
+     "name": "22_转场音效.mp3",
+     "dur_s": 0.39,
+     "peak_dbfs": 0.0,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/转场音效/23_转场音效.mp3",
+     "name": "23_转场音效.mp3",
+     "dur_s": 0.42,
+     "peak_dbfs": -3.4,
+     "dup_of": "03_开篇音效.mp3"
+    }
+   ]
+  },
+  "情绪音效": {
+   "tip": "情绪起落的点缀；感叹、失落、轻松",
+   "use": [
+    "升华 bell",
+    "翻车/否定 error",
+    "人群反应 reaction",
+    "悬念 tension"
+   ],
+   "items": [
+    {
+     "file": "剪映音效/情绪音效/24_情绪音效.mp3",
+     "name": "24_情绪音效.mp3",
+     "dur_s": 0.5,
+     "peak_dbfs": -2.2,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/情绪音效/25_情绪音效.mp3",
+     "name": "25_情绪音效.mp3",
+     "dur_s": 0.42,
+     "peak_dbfs": -3.4,
+     "dup_of": "03_开篇音效.mp3"
+    },
+    {
+     "file": "剪映音效/情绪音效/26_情绪音效.mp3",
+     "name": "26_情绪音效.mp3",
+     "dur_s": 0.42,
+     "peak_dbfs": -3.4,
+     "dup_of": "03_开篇音效.mp3"
+    },
+    {
+     "file": "剪映音效/情绪音效/27_情绪音效.mp3",
+     "name": "27_情绪音效.mp3",
+     "dur_s": 0.53,
+     "peak_dbfs": -7.9,
+     "dup_of": null
+    },
+    {
+     "file": "剪映音效/情绪音效/28_情绪音效.mp3",
+     "name": "28_情绪音效.mp3",
+     "dur_s": 0.44,
+     "peak_dbfs": -3.6,
+     "dup_of": "17_重点强调.mp3"
+    }
+   ]
+  }
+ }
+}
