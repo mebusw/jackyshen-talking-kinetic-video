@@ -1,12 +1,12 @@
   
 
-# AGENTS.md — 真人口播网感视频制作规范
+# 生产手册 — 真人口播网感视频制作规范
 
-> 本文件是 Codex 和 Claude Code 共用的通用视频制作规范。
+> 本文件是 `social-media-savvy-talking-head-kinetic-video` skill 的详细生产手册。
 > 
 > 规定内容剪辑、视觉风格、字幕动效、共享资源、本机公共引擎、渲染流程和交付标准。
 > 
-> 每个视频项目独立管理；公共引擎和共享资源统一维护。
+> 每个视频项目独立管理；公共引擎和共享资源只维护一份，直接复用 skill 自身目录。
 
 # A. 制作目标与创作规范
 
@@ -73,7 +73,7 @@
 |背景音乐|从共享音乐资源库选择|
 |音效|从共享音效资源库选择|
 |无原片字幕|生成独立字幕文件，不默认烧录|
-|视频工程|从公共引擎模板创建|
+|视频工程|使用共享引擎创建，不在项目内复制引擎|
 |字体|优先使用本机共享字体及公共引擎字体|
 
 用户指定的要求优先于默认规则。
@@ -1006,25 +1006,25 @@ text-shadow: 0 6px 20px rgba(0,0,0,.6);
 
 音乐和音效资源库属于本机共享基础设施，不属于某个单集项目。
 
-**唯一事实源（2026-11-03 起）**：
+**唯一事实源（skill 自身目录）**：
 
 ```
-引擎-模板/
+<skill-dir>/
 └── resources/
     ├── 音乐-资源库/
     └── 音效-资源库/
 ```
 
 这两个目录和公共引擎一起放在同一个 Git 仓库中管理，并推送到 GitHub。
-系列根目录下的 `音乐-资源库` / `音效-资源库` 只是兼容旧项目的链接；
-新增、替换、整理素材时必须进入 `引擎-模板/resources/` 的真实目录操作。
+旧系列根目录下的同名链接只用于兼容旧项目；
+新增、替换、整理素材时必须进入 `<skill-dir>/resources/` 的真实目录操作。
 
 ### 10.1 共享音乐资源库
 
 唯一路径：
 
 ```
-引擎-模板/resources/音乐-资源库/
+<skill-dir>/resources/音乐-资源库/
 ```
 
 
@@ -1043,7 +1043,7 @@ text-shadow: 0 6px 20px rgba(0,0,0,.6);
     
 6. 不要把共享音乐资源库复制成每个项目的独立资源库。
     
-7. 不要绕过 `引擎-模板/resources/音乐-资源库/` 另建副本。
+7. 不要绕过 `<skill-dir>/resources/音乐-资源库/` 另建副本。
     
 8. 不要移动、重命名或删除共享素材；需要调整时先提交 Git。
     
@@ -1053,7 +1053,7 @@ text-shadow: 0 6px 20px rgba(0,0,0,.6);
 唯一路径：
 
 ```
-引擎-模板/resources/音效-资源库/
+<skill-dir>/resources/音效-资源库/
 ```
 
 
@@ -1072,33 +1072,23 @@ text-shadow: 0 6px 20px rgba(0,0,0,.6);
     
 6. 不要过度使用音效。
     
-7. 开工前先读 `引擎-模板/resources/音效-资源库/音效索引.json` 与 `使用规则.md`。
+7. 开工前先读 `<skill-dir>/resources/音效-资源库/音效索引.json` 与 `使用规则.md`。
     
-8. 不要绕过 `引擎-模板/resources/音效-资源库/` 另建副本。
+8. 不要绕过 `<skill-dir>/resources/音效-资源库/` 另建副本。
     
 9. 不要移动、重命名或删除共享素材；需要调整时先提交 Git。
     
 
 ### 10.3 资源引用
 
-项目应记录实际使用的素材文件及其路径。
-
-如果资源库文件需要复制到项目中：
-
-- 复制仅用于运行时依赖或交付。
-    
-- 不得把副本当作新的共享资源源头。
-    
-- 不得修改原始共享素材。
-    
-- 项目完成后不清理共享资源库。
+项目应记录实际使用的素材文件及其路径。正常制作和渲染都直接引用 skill 中的共享文件，不在项目里复制素材库。
 
 ### 10.4 Git 管理
 
-- 仓库根目录：`引擎-模板/`
+- skill 根目录：包含 `SKILL.md` 的目录。
 - 共享音频实际存放在仓库的 `resources/` 下，不使用 Git LFS。
 - 修改共享音频后必须一起提交，不能只改本地文件不记录。
-- `AGENTS.md` 的仓库快照为 `引擎-模板/AGENTS.prompt.md`。
+- 生产规范维护在 `references/production-playbook.md`，不再要求项目级 `AGENTS.md`。
     
 
 ## 11. 共享字体资源
@@ -1107,10 +1097,10 @@ text-shadow: 0 6px 20px rgba(0,0,0,.6);
 
 ### 11.1 Noto Sans SC
 
-本机共享字体：
+skill 内置主字体：
 
 ```
-~/Library/Fonts/NotoSansSC-VariableFont_wght.ttf
+<skill-dir>/engine/assets/NotoSansSC-Var.ttf
 ```
 
 用途：
@@ -1130,20 +1120,14 @@ text-shadow: 0 6px 20px rgba(0,0,0,.6);
 900
 ```
 
-项目运行时可以将字体复制到工程：
-
-```
-assets/NotoSansSC-Var.ttf
-```
-
-这是运行时副本，不是独立字体源。
+预览和渲染直接读取 skill 中的字体，不在每个项目里复制。
 
 ### 11.2 手写字体
 
 公共引擎字体：
 
 ```
-引擎-模板/assets/brush.ttf
+<skill-dir>/engine/assets/brush.ttf
 ```
 
 真实字体名称：
@@ -1228,24 +1212,25 @@ await document.fonts.ready;
 公共引擎唯一事实源：
 
 ```
-引擎-模板/
+<skill-dir>/engine/
 ```
 
-新项目一律从这里创建，不得从某个旧视频项目复制引擎。
+新项目一律通过本 skill 调用这里的引擎，不得从旧视频项目复制引擎，也不要在项目内保存引擎副本。
 
 ### 12.2 公共引擎文件
 
 |文件|职责|
 |---|---|
-|`index.html`|动画引擎、文字动画、蒙版和预览|
-|`build.mjs`|时间轴编译和构建期校验|
-|`render_frames.mjs`|Playwright 逐帧渲染透明 PNG|
-|`示例-时间轴-含split.json`|含 split 的示例时间轴|
-|`assets/brush.ttf`|手写字体|
-|`resources/音乐-资源库/`|共享 BGM（唯一事实源）|
-|`resources/音效-资源库/`|共享 SFX（剪映官方，唯一事实源）|
-|`AGENTS.prompt.md`|项目 `AGENTS.md` 的仓库快照|
-|`README.md`|引擎使用说明和技术规范|
+|`<skill-dir>/engine/index.html`|动画引擎、文字动画、蒙版和预览|
+|`<skill-dir>/engine/build.mjs`|时间轴编译和构建期校验（支持 `--project`）|
+|`<skill-dir>/engine/render_frames.mjs`|Playwright 逐帧渲染透明 PNG（支持 `--project`）|
+|`<skill-dir>/engine/preview_server.mjs`|同时托管共享引擎和薄项目目录|
+|`<skill-dir>/engine/示例-时间轴-含split.json`|含 split 的示例时间轴|
+|`<skill-dir>/engine/assets/`|Noto Sans SC 与手写字体|
+|`<skill-dir>/resources/音乐-资源库/`|共享 BGM（唯一事实源）|
+|`<skill-dir>/resources/音效-资源库/`|共享 SFX（剪映官方，唯一事实源）|
+|`<skill-dir>/scripts/create_project.py`|创建不复制共享资源的最小项目骨架|
+|`<skill-dir>/SKILL.md`|skill 入口与迁移规则|
 
 公共引擎还应维护其依赖字体、必要配置及其他运行时资源。
 
@@ -1272,28 +1257,21 @@ await document.fonts.ready;
 
 ### 12.4 新项目创建规则
 
-1. 只复制公共引擎代码、构建脚本和必要字体；**不要复制 `resources/` 共享音乐/音效库**。
-    
-2. 创建独立的视频工程目录。
-    
-3. 将共享字体复制到项目 `assets/`，满足运行时需要。
-    
-4. 编写项目自己的 `口播稿.md`。
-    
-5. 生成项目自己的 `timeline.json`。
-    
-6. 编写项目自己的 `direction.md`。
-    
-7. 修改时间轴和项目素材，不要复制旧项目的单集逻辑。
-
-8. 项目中引用音乐/音效时，直接使用 `引擎-模板/resources/音乐-资源库/` 与 `引擎-模板/resources/音效-资源库/`，不要建立第二份副本。
+1. 运行 `python3 "<skill-dir>/scripts/create_project.py" "<项目绝对路径>"`。
+2. 项目只保留本集内容、项目素材和产物，不复制 `engine/`、字体或 `resources/`。
+3. 编写项目自己的 `口播稿.md`。
+4. 生成项目自己的 `timeline.json`。
+5. 编写项目自己的 `direction.md`。
+6. 项目脚本调用引擎时，始终使用 `<skill-dir>/engine/...` 的绝对路径。
+7. 项目中引用音乐/音效时，直接使用 skill 的资源库，不建立第二份副本。
+8. 不生成项目级 `AGENTS.md`；通用规则由本 skill 统一维护。
     
 
 ### 12.5 公共引擎维护规则
 
 1. 公共引擎是唯一事实源。
     
-2. 新动效和新转场应先进入公共引擎，再由具体项目调用。
+2. 新动效和新转场应先进入 skill 的公共引擎，再由具体项目调用。
     
 3. 不要只在某一集里修改引擎，导致下一集无法复用。
     
@@ -1303,7 +1281,7 @@ await document.fonts.ready;
     
 6. 不要在多个项目中维护功能逐渐漂移的引擎副本。
     
-7. 公共模板更新只影响后续新项目，不擅自回改已完成的旧项目。
+7. 公共引擎更新只影响后续新项目，不擅自回改已完成的旧项目。
     
 
 ### 12.6 回归验证
@@ -1333,11 +1311,11 @@ await document.fonts.ready;
 
 1. 阅读全局 `~/.codex/AGENTS.md`。
     
-2. 阅读当前项目 `AGENTS.md`。
+2. 读取本 skill 的 `SKILL.md` 和本生产手册。
     
-3. 检查共享音乐、音效和字体资源路径。
+3. 检查 skill 内的共享音乐、音效和字体资源路径。
     
-4. 检查公共引擎。
+4. 检查 skill 内的公共引擎。
     
 5. 检查现有项目文件。
     
@@ -1399,40 +1377,26 @@ await document.fonts.ready;
 
 ```
 project/
-├── AGENTS.md
-├── README.md
-├── assets/
-│   ├── fonts/
-│   ├── music/
-│   ├── sfx/
-│   └── images/
 ├── source/
 │   ├── original_video.mp4
 │   └── original_audio.wav
-├── scripts/
-│   ├── build.mjs
-│   ├── render_frames.mjs
-│   ├── make_final.sh
-│   └── cut_clips.mjs
 ├── 口播稿.md
 ├── 打点表.md
 ├── direction.md
 ├── timeline.json
-├── index.html
+├── rebuild.sh
+├── preview.sh
 ├── overlay/
 ├── renders/
 ├── clips/
-├── qa/
-└── preview.sh
+└── qa/
 ```
 
 目录说明：
 
 - `source/`：原始素材。
     
-- `assets/`：项目专属素材及运行时依赖副本。
-    
-- `scripts/`：构建、渲染、合成和切片脚本。
+- `assets/`：只放本集专属图片、B-roll 等，不放共享引擎、字体和音频库。
     
 - `口播稿.md`：人工校订的口播稿。
     
@@ -1451,11 +1415,13 @@ project/
 - `qa/`：抽帧及检查结果。
     
 - `preview.sh`：预览兜底入口。
+
+共享引擎、字体、音乐库和音效库始终使用 skill 自身目录，不进入项目。
     
 
 不要为了符合模板而创建无用空目录。
 
-### 14.1 公共引擎（`引擎-模板/`）实际文件
+### 14.1 公共引擎（`<skill-dir>/engine/`）实际文件
 
 | 文件 | 作用 |
 |---|---|
@@ -1467,6 +1433,8 @@ project/
 | `apply_deletions.py` | 把删掉的词扣到 cuts.json + timeline.json（通用，不含集数） |
 | `render_frames.mjs` | 逐帧渲染透明文字层 |
 | `示例-时间轴-含split.json` | split 动效的参考时间轴 |
+| `assets/NotoSansSC-Var.ttf` | 主字幕与大字字体 |
+| `assets/brush.ttf` | 手写体 |
 
 每集自己保留的：`plan.py` / `mktimeline.py` / `mkchars.py` / `mkpure.py` / `mkaudio.py` / `mkclips.py` / `mkdocs.py` / `mkpoint.py` / `rebuild.sh`。
 
@@ -2021,7 +1989,13 @@ o.el.style.maskImage = g;
 公共引擎支持：
 
 ```
-<工程目录>/index.html?preview=1
+node "<skill-dir>/engine/preview_server.mjs" --project "<项目绝对路径>"
+```
+
+服务打印：
+
+```
+http://127.0.0.1:8787/index.html?preview=1&edit=1
 ```
 
 预览模式用途：
@@ -2062,7 +2036,7 @@ o.el.style.maskImage = g;
     
 - `?mute=1` 可以关闭声音。
     
-- `?src=file:///...` 可以临时指定画面源。
+- `?src=/renders/...` 可以临时指定项目内画面源。
     
 
 预览用途是检查动效、布局和蒙版，不是检查最终混音。
@@ -2086,13 +2060,13 @@ o.el.style.maskImage = g;
 
 ### 18.3 纯人声版必须先于 build
 
-`build.mjs` 会扫描 `renders/`，寻找纯人声版并将路径写入编译产物 `timeline.js` 的 `meta.previewSrc`。
+`build.mjs --project <项目>` 会扫描该项目的 `renders/`，寻找纯人声版并将路径写入项目编译产物 `timeline.js` 的 `meta.previewSrc`。
 
 因此生产顺序必须是：
 
 1. 生成纯人声版。
     
-2. 执行 `node build.mjs`。
+2. 执行 `node "<skill-dir>/engine/build.mjs" --project "<项目绝对路径>"`。
     
 3. 执行逐帧渲染。
     
@@ -2111,28 +2085,21 @@ o.el.style.maskImage = g;
 open_in_codex({
   target: {
     type: "browser",
-    url: "file:///工程目录/index.html?preview=1"
+    url: "http://127.0.0.1:8787/index.html?preview=1&edit=1"
   }
 });
 ```
 
 注意：
 
-1. 路径中的中文、空格、`@` 和括号必须进行 percent-encode。
+1. 先启动共享预览服务，再打开它打印的 HTTP 地址。
+2. browser target 不要传 `placement`。
     
-2. 可以用 Python 生成 URL：
+3. 返回 `queued` 属于正常结果。
     
-
-```
-python3 -c "import os,urllib.parse;print('file://'+urllib.parse.quote(os.getcwd())+'/index.html?preview=1')"
-```
-
-3. browser target 不要传 `placement`。
+4. 不要用系统 `open` 命令代替 Codex 侧栏预览。
     
-4. 返回 `queued` 属于正常结果。
-    
-5. 不要用系统 `open` 命令代替 Codex 侧栏预览。
-    
+5. 主动给用户一个可点击的 `preview` 链接。
 6. 回复用户时说明这是动效预览，最终成片仍然是 `renders/` 中的 MP4。
     
 
@@ -2142,16 +2109,13 @@ python3 -c "import os,urllib.parse;print('file://'+urllib.parse.quote(os.getcwd(
 
 ```
 #!/bin/zsh
-
-cd "$(dirname "$0")" || exit 1
-
-URL=$(python3 -c \
-  "import os,urllib.parse;print('file://'+urllib.parse.quote(os.getcwd())+'/index.html?preview=1')")
-
-open "$URL"
+set -e
+PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SKILL_DIR="${KINETIC_SKILL_DIR:-$HOME/.agents/skills/social-media-savvy-talking-head-kinetic-video}"
+exec node "$SKILL_DIR/engine/preview_server.mjs" --project "$PROJECT_DIR"
 ```
 
-当 Codex 预览不可用时，双击该脚本可以使用系统浏览器打开。
+该脚本不会复制引擎或资源；它直接启动 skill 自身的预览服务。
 
 ### 18.6 预览编辑器（改文字，不用再开剪映）
 
@@ -2312,9 +2276,9 @@ apply_deletions.py → 扣掉删除 → cuts.json + timeline.json + cut_fast.fil
 典型命令：
 
 ```
-node build.mjs
+node "<skill-dir>/engine/build.mjs" --project "<项目绝对路径>"
 
-node render_frames.mjs \
+node "<skill-dir>/engine/render_frames.mjs" --project "<项目绝对路径>" \
   --start 0 \
   --end <总时长> \
   --fps 30 \
@@ -2539,7 +2503,7 @@ frame_number = round(time_in_seconds × fps)
     
 5. 音乐、音效和字体使用本机共享资源。
     
-6. 公共引擎只有一个事实源，新项目从模板创建。
+6. 公共引擎只有一个事实源，新项目直接复用 skill，引擎和音频库都不复制。
     
 7. 单集时间轴、配色和测量结果不污染公共引擎。
     

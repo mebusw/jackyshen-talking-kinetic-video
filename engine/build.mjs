@@ -1,26 +1,33 @@
 import fs from 'node:fs';
 import path from 'node:path';
-const root = path.dirname(decodeURIComponent(new URL(import.meta.url).pathname));
-const tl = JSON.parse(fs.readFileSync(path.join(root,'timeline.json'),'utf8'));
+import { fileURLToPath } from 'node:url';
+
+const engineRoot = path.dirname(fileURLToPath(import.meta.url));
+const argProject = process.argv.indexOf('--project');
+const projectRoot = argProject >= 0
+  ? path.resolve(process.argv[argProject + 1] || process.cwd())
+  : engineRoot;
+
+const tl = JSON.parse(fs.readFileSync(path.join(projectRoot,'timeline.json'),'utf8'));
 // 预览模式（?preview=1）的画面源：自动找 renders/ 里的「纯人声版」——
 // 它就是剪完+归一化后的原片（有画面、有人声、无字无音乐），正好拿来垫底。
 // 只写进 timeline.js（编译产物），不碰手写的 timeline.json。
 try{
-  const rd = path.join(root,'renders');
+  const rd = path.join(projectRoot,'renders');
   const hit = fs.readdirSync(rd).find(f=>/纯人声版\.mp4$/.test(f));
-  if(hit) tl.meta.previewSrc = 'renders/' + hit;
+  if(hit) tl.meta.previewSrc = 'renders/' + encodeURIComponent(hit);
 }catch(e){}
 
 /* ---- 逐字删除：把「字级时间轴 / 切片映射 / 待删区间」编进 timeline.js ----
    cuts.json    基线切片（src<->out 映射），浏览器靠它把「原片时间」换算成「成片时间」
    chars.json   校订稿逐字 + 每个字的原片/成片时间（mkchars.py 产出）
    deletions.json  待删的词（原片时间区间），浏览器据此重映射时间轴并跳过被删区间 */
-const jread=(f)=>{try{return JSON.parse(fs.readFileSync(path.join(root,f),'utf8'));}catch(e){return null;}};
+const jread=(f)=>{try{return JSON.parse(fs.readFileSync(path.join(projectRoot,f),'utf8'));}catch(e){return null;}};
 const _cuts=jread('cuts.json'), _chars=jread('chars.json'), _dels=jread('deletions.json');
 if(_cuts&&_cuts.rows) tl.meta.cuts=_cuts.rows;
 if(_chars&&_chars.chars) tl.meta.chars=_chars.chars;
 if(_dels&&_dels.dels&&_dels.dels.length) tl.meta.dels=_dels.dels;
-fs.writeFileSync(path.join(root,'timeline.js'), 'window.__TIMELINE__ = ' + JSON.stringify(tl) + ';\n');
+fs.writeFileSync(path.join(projectRoot,'timeline.js'), 'window.__TIMELINE__ = ' + JSON.stringify(tl) + ';\n');
 const errs=[];
 const DEV=['drop','wipe','slam','slideL','type','fade','split'];
 let prevT1=-1;
@@ -100,4 +107,4 @@ for(const g of tl.groups){
 }
 if(errs.length){console.error('PRE-FLIGHT FAILED:\n'+errs.join('\n'));process.exit(1);}
 const ys=tl.groups.map(g=>g.y);
-console.log(`OK groups=${tl.groups.length} total=${tl.meta.total}s yRange=${Math.min(...ys)}..${Math.max(...ys)}`);
+console.log(`OK project=${projectRoot} groups=${tl.groups.length} total=${tl.meta.total}s yRange=${Math.min(...ys)}..${Math.max(...ys)}`);

@@ -1,18 +1,30 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
-const root = path.dirname(decodeURIComponent(new URL(import.meta.url).pathname));
+const engineRoot = path.dirname(fileURLToPath(import.meta.url));
 const args = Object.fromEntries(process.argv.slice(2).flatMap((a,i,arr)=>{
   if (a.startsWith('--')) { const k=a.slice(2); const v=(arr[i+1] && !arr[i+1].startsWith('--'))?arr[i+1]:'1'; return [[k,v]]; }
   return [];
 }));
+const projectRoot = args.project ? path.resolve(args.project) : engineRoot;
+if (fs.existsSync(path.join(projectRoot, 'timeline.json'))) {
+  execFileSync('node', [path.join(engineRoot, 'build.mjs'), '--project', projectRoot],
+    { stdio:'inherit' });
+}
+const timelinePath = path.join(projectRoot, 'timeline.js');
+if (!fs.existsSync(timelinePath)) {
+  throw new Error(`找不到 ${timelinePath}；请先准备 timeline.json 并运行 build.mjs`);
+}
 const CHROME = process.env.CHROME_BIN || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 const browser = await chromium.launch({ headless:true, executablePath:CHROME,
   args:['--force-color-profile=srgb','--disable-lcd-text','--hide-scrollbars','--allow-file-access-from-files','--font-render-hinting=none'] });
 const page = await browser.newPage({ viewport:{width:1080,height:1920}, deviceScaleFactor:1 });
-await page.goto('file://' + path.join(root,'index.html'), { waitUntil:'load' });
+await page.addInitScript({ content:fs.readFileSync(timelinePath, 'utf8') });
+await page.goto('file://' + path.join(engineRoot,'index.html'), { waitUntil:'load' });
 
 const fontInfo = await page.evaluate(async () => {
   const specs = new Set();
@@ -37,7 +49,7 @@ console.log('fonts:', JSON.stringify(fontInfo));
 await page.waitForFunction(()=>window.__READY__===true, null, {timeout:15000});
 const total = await page.evaluate(()=>window.__TOTAL__);
 const groups = await page.evaluate(()=>window.__GROUPS__);
-const outDir = path.join(root, args.out || 'overlay');
+const outDir = path.join(projectRoot, args.out || 'overlay');
 fs.mkdirSync(outDir, { recursive:true });
 
 async function grab(t,file){
