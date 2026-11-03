@@ -1,0 +1,119 @@
+{
+ "meta": {
+  "title": "EP02 实验 · 上下裂开（split）",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "total": 15.5,
+  "palette": {
+   "ink": "#FFFFFF",
+   "sub": "#C7CFDC",
+   "accent": "#FEBD0D",
+   "scrim": "#06080C"
+  },
+  "inDur": 0.42,
+  "outDur": 0.32
+ },
+ "groups": [
+  {
+   "id": "g01",
+   "y": 1300,
+   "t0": 0.35,
+   "t1": 4.3,
+   "items": [
+    {
+     "id": "g01-m",
+     "role": "main",
+     "text": "以前做个管理系统",
+     "size": 104,
+     "device": "wipe",
+     "t0": 0.35,
+     "t1": 4.3
+    },
+    {
+     "id": "g01-s",
+     "role": "sub",
+     "text": "要一个团队",
+     "size": 56,
+     "device": "fade",
+     "t0": 0.65,
+     "t1": 4.3
+    }
+   ]
+  },
+  {
+   "id": "g02",
+   "y": 1300,
+   "t0": 4.55,
+   "t1": 9.4,
+   "items": [
+    {
+     "id": "g02-m",
+     "role": "main",
+     "text": "几十人",
+     "size": 126,
+     "device": "slam",
+     "t0": 4.55,
+     "t1": 9.4
+    }
+   ]
+  },
+  {
+   "id": "g03",
+   "y": 1300,
+   "t0": 9.6,
+   "t1": 14.4,
+   "items": [
+    {
+     "id": "g03-m",
+     "role": "main",
+     "text": "花几个月",
+     "size": 118,
+     "device": "split",
+     "t0": 9.6,
+     "t1": 14.4,
+     "split": {
+      "at": 1.0,
+      "gap": 76,
+      "dur": 0.8
+     }
+    },
+    {
+     "id": "g03-c",
+     "role": "crack",
+     "text": "几分钟",
+     "size": 112,
+     "device": "fade",
+     "t0": 11.45,
+     "t1": 14.4
+    }
+   ]
+  },
+  {
+   "id": "g04",
+   "y": 1300,
+   "t0": 14.45,
+   "t1": 15.45,
+   "items": [
+    {
+     "id": "g04-m",
+     "role": "main",
+     "text": "现在只要会",
+     "size": 100,
+     "device": "type",
+     "t0": 14.45,
+     "t1": 15.45
+    },
+    {
+     "id": "g04-s",
+     "role": "sub",
+     "text": "Claude Code",
+     "size": 54,
+     "device": "fade",
+     "t0": 14.75,
+     "t1": 15.45
+    }
+   ]
+  }
+ ]
+}

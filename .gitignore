@@ -1,0 +1,30 @@
+# macOS
+.DS_Store
+
+# Dependencies
+node_modules/
+
+# Large media and generated render artifacts
+*.mp4
+*.mov
+*.mkv
+*.wav
+*.mp3
+*.png
+*.jpg
+*.jpeg
+overlay/
+overlay-*/
+renders/
+clips/
+qa/
+
+# Runtime/build output
+timeline.js
+*.log
+*.bak
+*.lock
+
+# Cloud-sync conflict copies
+*-NSConflict/
+* 2/

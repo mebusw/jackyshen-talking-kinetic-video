@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>kinetic overlay TP02 EP06</title>
+<style>
+  @font-face{font-family:'Noto Sans SC';src:url('assets/NotoSansSC-Var.ttf') format('truetype-variations');font-weight:100 900;font-style:normal;font-display:block;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1080px;height:1920px;background:transparent;overflow:hidden;
+    font-family:'Noto Sans SC','PingFang SC','Hiragino Sans GB',sans-serif;
+    -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+  #stage{position:relative;width:1080px;height:1920px;overflow:hidden}
+
+  /* ---- 底部暗渐变（保证白字在亮处也读得出）---- */
+  .scrim{position:absolute;left:0;width:1080px;pointer-events:none}
+  /* 本集原片无烧录字幕，画面底部是深色衣服 —— 暗渐变比 EP05 轻，
+     只需压住偶尔抬起来的手（最亮处 ~220/255），不把整块衣服压死 */
+  #scrim-bot{top:1290px;height:630px;
+    background:linear-gradient(180deg,rgba(6,8,12,0) 0%,rgba(6,8,12,.18) 26%,rgba(6,8,12,.40) 55%,rgba(6,8,12,.52) 80%,rgba(6,8,12,.58) 100%);}
+
+  /* ---- L1 顶部钩子条（全程静止）---- */
+
+  /* ---- L2 跟读/重点大字（底部，逐组换）---- */
+  #band{position:absolute;left:0;top:0;width:1080px;height:1920px}
+  .group{position:absolute;left:0;width:1080px;text-align:center;pointer-events:none}
+  .item{position:absolute;left:0;width:1080px;display:flex;justify-content:center;align-items:center;opacity:0}
+  .tw{position:relative;display:inline-flex;flex-wrap:nowrap;align-items:baseline}
+  .item.main .tw{font-weight:900;line-height:1.06;letter-spacing:.01em;white-space:nowrap;color:var(--ink);
+    -webkit-text-stroke:8px #06080C;paint-order:stroke fill;
+    text-shadow:0 10px 34px rgba(0,0,0,.6),0 2px 6px rgba(0,0,0,.5)}
+  .item.sub .tw{font-weight:700;line-height:1.2;letter-spacing:.10em;white-space:nowrap;color:var(--sub);
+    -webkit-text-stroke:5px #06080C;paint-order:stroke fill;
+    text-shadow:0 6px 20px rgba(0,0,0,.7)}
+  .ch{display:inline-block;transform-origin:50% 60%;white-space:pre}
+  .ch.em{font-style:normal;color:var(--accent)}
+
+  /* ---- 上下裂开（device=split）：一行字从水平中线撕成上下两半 ----
+     两半是同一行的两个副本，各自 clip 掉一半，再分别上移/下移，中间留出空隙。
+     ⚠️ 汉字被水平截断（"花"会变成两截）是这个效果本身的代价，不是 bug。
+     补救：选字少、笔画粗的句子；gap 调大让两半彻底分开。 */
+  .item.split .splitwrap{display:inline-grid}
+  .item.split .half{grid-area:1 / 1}
+  .item.split .half.top .tw{clip-path:inset(0 0 50% 0)}
+  .item.split .half.bot .tw{clip-path:inset(50% 0 0 0)}
+
+  /* ---- 裂开后的第二句（role=crack）：手写体，落在空隙正中 ---- */
+  @font-face{font-family:'brush';src:url('assets/brush.ttf') format('truetype');font-weight:400;font-display:block;}
+  .item.crack .tw{font-family:'brush','Noto Sans SC',sans-serif;font-weight:400;letter-spacing:.04em;
+    -webkit-text-stroke:4px #06080C;paint-order:stroke fill;color:var(--accent);
+    text-shadow:0 10px 30px rgba(0,0,0,.6);}
+
+  /* ---- 预览模式（?preview=1）：只在浏览器里看效果，生产渲染完全不进这里 ---- */
+  body.preview{background:#0b0c0e;overflow:hidden}
+  body.preview #stage{position:absolute;transform-origin:top left}
+  #pvbar{position:fixed;left:0;right:0;bottom:0;height:78px;display:none;align-items:center;gap:14px;
+    padding:0 16px;background:rgba(11,13,17,.94);border-top:1px solid rgba(255,255,255,.14);
+    font:500 13px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:#d7dce4;z-index:9999}
+  body.preview #pvbar{display:flex}
+  #pvbar button{width:38px;height:38px;border:1px solid rgba(255,255,255,.22);border-radius:8px;
+    background:#1a1e26;color:#FEBD0D;font-size:15px;cursor:pointer;flex:none}
+  #pvbar button:hover{background:#262b35}
+  #pvtime{flex:none;min-width:170px;letter-spacing:.04em}
+  #pvtrack{position:relative;flex:1;height:38px;cursor:pointer;user-select:none}
+  #pvtrack .rail{position:absolute;left:0;right:0;top:17px;height:4px;background:#2b313b;border-radius:2px}
+  #pvtrack .tick{position:absolute;top:11px;width:2px;height:10px;background:#4d5663}
+  #pvtrack .tick.g{background:#3f7ea8;top:6px;height:18px;pointer-events:none}
+  #pvtrack .tick.fx{background:#FEBD0D;width:3px;height:20px;top:6px;border-radius:1px}
+  #pvtrack .tick:hover{background:#fff}
+  #pvhead{position:absolute;top:0;width:2px;height:34px;background:#FF3B30;
+    box-shadow:0 0 8px rgba(255,59,48,.9);pointer-events:none;z-index:3}
+  #pvhead::after{content:'';position:absolute;left:-4px;top:0;width:10px;height:10px;
+    background:#FF3B30;clip-path:polygon(50% 100%,0 0,100% 0)}
+  #pverr{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:99999;
+    padding:18px 24px;border:1px solid #4a3a1e;border-radius:10px;background:rgba(40,30,10,.94);
+    color:#ffd479;font:500 14px/1.7 ui-monospace,Menlo,monospace;max-width:70vw;text-align:center}
+  body.charmode #pvhint{top:12px;bottom:auto}
+  #pvhint{position:fixed;right:16px;bottom:92px;z-index:9999;color:#7d8797;font:500 12px/1.8 ui-monospace,Menlo,monospace;
+    text-align:right;pointer-events:none}
+
+  /* ---- 编辑器（preview.js）---- */
+  body.editing #band .item{cursor:move}
+  /* .group 原本 pointer-events:none，编辑时要让「文字本身」能点中 */
+  body.editing #band .tw{pointer-events:auto}
+  body.editing #band .item .rz{pointer-events:auto}
+  body.editing #band .item.sel{outline:2px dashed #FEBD0D;outline-offset:8px}
+  body.editing #band .item .rz{position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;
+    background:#FEBD0D;border:2px solid #111;border-radius:4px;cursor:nwse-resize;display:block}
+  #pvedit{position:fixed;right:18px;top:18px;width:320px;display:none;z-index:10000;
+    background:rgba(14,16,21,.97);border:1px solid rgba(255,255,255,.16);border-radius:10px;
+    padding:14px;color:#dfe5ee;font:500 13px/1.5 -apple-system,"PingFang SC",sans-serif}
+  #pvedit.on{display:block}
+  #pvedit .hd{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  #pvedit .hd .tag{font:600 11px/1 ui-monospace,Menlo,monospace;color:#111;background:#FEBD0D;
+    padding:4px 8px;border-radius:5px}
+  #pvedit .hd button{margin-left:auto;background:none;border:none;color:#8b95a4;font-size:15px;cursor:pointer}
+  #pvedit label{display:block;color:#8b95a4;font-size:12px;margin:8px 0 4px}
+  #pvedit textarea,#pvedit input{width:100%;background:#1b2029;border:1px solid #313845;border-radius:6px;
+    color:#fff;padding:7px 8px;font:500 13px/1.5 -apple-system,"PingFang SC",sans-serif;outline:none}
+  #pvedit textarea:focus,#pvedit input:focus{border-color:#FEBD0D}
+  #pvedit .row{display:flex;align-items:center;gap:8px;margin-top:8px}
+  #pvedit .row label{margin:0;flex:none;width:34px}
+  #pvedit .row input{width:70px}
+  #pvedit .row button{flex:none;background:#262d38;border:1px solid #3a4352;color:#dfe5ee;
+    border-radius:6px;padding:7px 10px;font-size:12px;cursor:pointer}
+  #pvedit .row button:hover{background:#333c49}
+  #pvsave{background:#FEBD0D !important;color:#111 !important;border-color:#FEBD0D !important;font-weight:700 !important}
+  #pvedit .msg{margin-top:9px;font:500 11px/1.5 ui-monospace,Menlo,monospace;color:#7d8797;min-height:14px}
+  #pvedit .hint{margin-top:8px;color:#5f6875;font-size:11px}
+  /* ---- 按段模式（segmode.js）：时间轴上两条蓝线之间 = 一句话 ---- */
+  #pvtrack .seg{position:absolute;top:9px;height:13px;background:rgba(63,126,168,.22);
+    border-left:1px solid #3f7ea8;border-right:1px solid #3f7ea8;box-sizing:border-box;
+    border-radius:2px;cursor:pointer}
+  #pvtrack .seg:hover{background:rgba(63,126,168,.48)}
+  #pvtrack .seg.sel{background:rgba(254,189,13,.55);border-color:#FEBD0D}
+  /* 切点标记：这里被剪掉了一块 */
+  #pvtrack .cut{position:absolute;top:0;height:7px;background:
+      repeating-linear-gradient(45deg,rgba(255,59,48,.95) 0 3px,rgba(255,59,48,.45) 3px 6px);
+    border:1px solid #FF3B30;border-radius:2px;box-sizing:border-box;cursor:default}
+  #pvtrack .cut:hover{background:repeating-linear-gradient(45deg,#ff8f86 0 3px,rgba(255,59,48,.6) 3px 6px)}
+  #segbar{position:fixed;left:0;right:0;bottom:78px;height:52px;display:none;align-items:center;gap:8px;
+    padding:0 14px;background:rgba(11,13,17,.96);border-top:1px solid rgba(255,255,255,.12);
+    font:500 12px/1 -apple-system,"PingFang SC",sans-serif;color:#d7dce4;z-index:9998}
+  body.segmode #segbar{display:flex}
+  #segbar button{height:26px;padding:0 10px;border:1px solid rgba(255,255,255,.2);border-radius:6px;
+    background:#1a1e26;color:#d7dce4;font-size:12px;cursor:pointer;white-space:nowrap;flex:none}
+  #segbar #seginfo{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #segbar button:hover{background:#262b35}
+  #segbar button.danger{color:#ff8f86;border-color:#5a2b28}
+  #segbar button.primary{background:#FEBD0D;border-color:#FEBD0D;color:#111;font-weight:700}
+  #segbar #seginfo{margin-right:auto;color:#9aa4b3}
+  #segbar #seginfo b{color:#ff8f86;font-weight:600}
+  #segbar #seginfo .chip{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:4px;
+    background:rgba(255,59,48,.16);border:1px solid rgba(255,59,48,.5);color:#ff8f86;font-size:11px}
+  /* 重建中：挡住整个界面，避免和后台任务打架 */
+  #segbusy{position:fixed;inset:0;z-index:20000;display:none;align-items:center;justify-content:center;
+    background:rgba(6,8,12,.82);backdrop-filter:blur(2px)}
+  #segbusy.on{display:flex}
+  #segbusy .box{width:min(560px,86vw);padding:22px 24px;border-radius:12px;
+    background:#141820;border:1px solid rgba(255,255,255,.16);color:#e6ebf2;
+    font:500 13px/1.7 -apple-system,"PingFang SC",sans-serif;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+  #segbusy .box b{display:block;font-size:16px;margin-bottom:6px;color:#FEBD0D}
+  #segbusy .box p{margin:0 0 10px;color:#9aa4b3}
+  #segbusy .box pre{margin:0;max-height:190px;overflow:auto;padding:10px;border-radius:8px;
+    background:#0d1015;border:1px solid rgba(255,255,255,.08);color:#8b95a4;
+    font:500 11px/1.6 ui-monospace,Menlo,monospace;white-space:pre-wrap}
+  #segbusy .box small{display:block;margin-top:10px;color:#6b7482}
+  body.locked #pvbar,body.locked #segbar,body.locked #pvedit{pointer-events:none;filter:saturate(.4) brightness(.8)}
+  body.segmode #pvhint{bottom:138px}
+
+  /* ---- 逐字模式（charmode.js）：字轨画在时间轴上方 ---- */
+  #pvchars{position:fixed;left:0;right:0;bottom:78px;height:114px;display:none;z-index:9998;
+    background:rgba(11,13,17,.96);border-top:1px solid rgba(255,255,255,.12);
+    padding:6px 12px 4px;box-sizing:border-box;flex-direction:column}
+  body.charmode #pvchars{display:flex}
+  #pvchars .tools{display:flex;align-items:center;gap:6px;margin-bottom:4px;height:24px;flex:none}
+  #pvchars button{height:24px;padding:0 9px;border:1px solid rgba(255,255,255,.2);border-radius:5px;
+    background:#1a1e26;color:#d7dce4;font:500 11px/1 -apple-system,"PingFang SC",sans-serif;cursor:pointer}
+  #pvchars button:hover{background:#262b35}
+  #pvchars button.danger{color:#ff8f86;border-color:#5a2b28}
+  #pvchars button.primary{background:#FEBD0D;border-color:#FEBD0D;color:#111;font-weight:700}
+  #pvchars .sep{width:1px;height:16px;background:rgba(255,255,255,.16)}
+  #pvchars .info{margin-left:auto;color:#8b95a4;font:500 11px/1 ui-monospace,Menlo,monospace}
+  #pvchars canvas{width:100%;height:54px;background:#0e1014;border:1px solid rgba(255,255,255,.10);
+    border-radius:6px;cursor:crosshair;display:block}
+  #pvchars .hint{height:13px;line-height:13px;color:#5f6875;font:500 10px/13px ui-monospace,Menlo,monospace;margin-top:3px;overflow:hidden}
+  #pvbar button#cvbtn{width:34px}
+
+  #pvtoast{position:fixed;left:50%;bottom:110px;transform:translate(-50%,20px);z-index:10001;
+    background:#FEBD0D;color:#111;font:700 13px/1 -apple-system,"PingFang SC",sans-serif;
+    padding:10px 16px;border-radius:8px;opacity:0;transition:.22s;pointer-events:none}
+  #pvtoast.on{opacity:1;transform:translate(-50%,0)}
+
+  /* ---- 圆形蒙版转场（§11.8）：蒙版外压黑，圆孔里露出主播大脸 ---- */
+  /* 蒙版压在画面层之上、跟读大字之下 —— 转场时只收缩画面，文字始终可读 */
+  #fx{position:absolute;left:0;top:0;width:1080px;height:1920px;pointer-events:none;z-index:10}
+  #band{z-index:20}
+  .fxmask{position:absolute;left:0;top:0;width:1080px;height:1920px;background:#000;display:none}
+
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="scrim" id="scrim-bot"></div>
+  <div id="band"></div>
+  <div id="fx"></div>
+</div>
+<script src="timeline.js"></script>
+<script>
+(function(){
+  var T=window.__TIMELINE__, P=T.meta.palette;
+  var IN=T.meta.inDur, OUT=T.meta.outDur;
+  var root=document.documentElement;
+  root.style.setProperty('--ink',P.ink); root.style.setProperty('--sub',P.sub);
+  root.style.setProperty('--accent',P.accent); root.style.setProperty('--gold',P.gold);
+
+  function parse(text){var out=[],acc=false;for(var i=0;i<text.length;i++){var c=text[i];
+    if(c==='*'){acc=!acc;continue;} out.push({ch:c,accent:acc});} return out;}
+
+  T.groups = T.groups.filter(function(g){ return !g.dead; });   // 整段被删掉的组不渲染
+  var band=document.getElementById('band'), items=[];
+  var fxLayer=document.getElementById('fx'), fxEls=[];
+  (T.fx||[]).forEach(function(f){
+    var el=document.createElement('div');
+    el.className='fxmask'; el.id=f.id;
+    fxLayer.appendChild(el);
+    fxEls.push({f:f, el:el});
+  });
+  var RMAX=2400;   // 1080x1920 对角线 2203，取 2400 保证能全黑
+  var ROPEN=1120;  // 圆孔半径超过「人脸中心到最远角」的 1053px 即等于全屏打开
+  function fxEase(p,kind){
+    if(kind==='inout') return p<0.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
+    if(kind==='in') return p*p;
+    return 1-Math.pow(1-p,2);                    // out：先快后慢
+  }
+  function fxRadius(f,t){
+    var K=f.k||[], n=K.length;
+    if(!n) return RMAX;
+    if(t<=K[0].t) return K[0].r;
+    if(t>=K[n-1].t) return K[n-1].r;
+    for(var i=0;i<n-1;i++){
+      if(t>=K[i].t && t<=K[i+1].t){
+        var span=Math.max(0.001,K[i+1].t-K[i].t);
+        var p=fxEase((t-K[i].t)/span, K[i].ease||'out');
+        return K[i].r + (K[i+1].r-K[i].r)*p;
+      }
+    }
+    return RMAX;
+  }
+  function applyFx(t){
+    fxEls.forEach(function(o){
+      var f=o.f, r=fxRadius(f,t);
+      if(r>=RMAX){ o.el.style.display='none'; return; }
+      o.el.style.display='block';
+      var g='radial-gradient(circle at '+f.cx+'% '+f.cy+'%, rgba(0,0,0,0) 0px, rgba(0,0,0,0) '+r.toFixed(1)+'px, #000 '+(r+1).toFixed(1)+'px)';
+      o.el.style.webkitMaskImage=g; o.el.style.maskImage=g;
+    });
+  }
+  T.groups.forEach(function(g){
+    var gEl=document.createElement('div');
+    gEl.className='group'; gEl.id=gEl.dataset.g=g.id;
+    gEl.style.top=g.y+'px';
+    var placed=0;
+    g.items.forEach(function(it){
+      var el=document.createElement('div');
+      el.className='item '+it.role; el.id=it.id;
+      el.style.fontSize=it.size+'px';
+      var tw=document.createElement('div'); tw.className='tw';
+      var spans=parse(it.text).map(function(c){
+        var s=document.createElement('span'); s.className='ch'+(c.accent?' em':'');
+        s.textContent=c.ch; tw.appendChild(s); return s;});
+      var host=tw, h1=null, h2=null, wrap=null;
+      if(it.device==='split'){
+        wrap=document.createElement('div'); wrap.className='splitwrap';
+        h1=document.createElement('div'); h1.className='half top';
+        h2=document.createElement('div'); h2.className='half bot';
+        h1.appendChild(tw); h2.appendChild(tw.cloneNode(true));
+        wrap.appendChild(h1); wrap.appendChild(h2);
+        host=wrap; el.classList.add('split');
+      }
+      el.appendChild(host);
+      if(it.dx) el.style.left=it.dx+'px';   /* 编辑器的水平位移 */
+      gEl.appendChild(el);
+      var top = it.role==='main' ? 0 : (it.role==='sub' ? 0 : 0);
+      items.push({it:it,el:el,tw:tw,chars:spans,g:g,idx:placed,wrap:wrap,halfT:h1,halfB:h2});
+      placed++;
+    });
+    band.appendChild(gEl);
+  });
+  // 同一 group 内：main 在上，sub 在下（sub 相对 main 偏移）
+  T.groups.forEach(function(g){
+    var main=g.items.find(function(i){return i.role==='main'});
+    var sub=g.items.find(function(i){return i.role==='sub'});
+    if(main){var m=items.filter(function(o){return o.it===main;})[0];
+      m.el.style.top=((main.dy||0))+'px';}
+    if(sub){var s=items.filter(function(o){return o.it===sub;})[0];
+      s.el.style.top=((main? (main.size*1.16+22) : 0)+(sub.dy||0))+'px';}
+    var crack=g.items.find(function(i){return i.role==='crack'});
+    if(crack){var c=items.filter(function(o){return o.it===crack;})[0];
+      var mainH=main? main.size*1.06 : 0;
+      var cH=crack.size*1.06;
+      c.el.style.top=(mainH/2 - cH/2).toFixed(1)+'px';}
+  });
+
+  function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+  function easeOutCubic(p){return 1-Math.pow(1-p,3);}
+  function easeOutQuint(p){return 1-Math.pow(1-p,5);}
+  function easeOutBack(p){var c1=1.70158,c3=c1+1;return 1+c3*Math.pow(p-1,3)+c1*Math.pow(p-1,2);}
+  function easeInCubic(p){return p*p*p;}
+
+  function applyDevice(o,t,st){
+    var el=o.el,tw=o.tw,chars=o.chars,dev=o.it.device;
+    var inP=0,outP=0;
+    if(t<st.inStart) return false;
+    if(t<st.inEnd){inP=clamp((t-st.inStart)/IN,0,1);}
+    else if(t<st.outStart){inP=1;}
+    else if(t<st.outEnd){inP=1;outP=clamp((t-st.outStart)/Math.max(0.001,(st.outEnd-st.outStart)),0,1);}
+    else return false;
+    var op=1, tr='', bl=0, sc=1, rot=0, cl='';
+    var e = inP<1 ? easeOutCubic(inP) : 1;
+    switch(dev){
+      case 'drop':
+        tr='translate3d(0,'+(-78*(1-e)).toFixed(2)+'px,0)'; bl=(11*(1-e)).toFixed(2);
+        break;
+      case 'wipe':
+        tr='translate3d('+(-26*(1-e)).toFixed(2)+'px,0,0)';
+        cl='inset(0 '+(100*(1-e)).toFixed(2)+'% 0 0)'; break;
+      case 'slam':
+        sc=(1.22-0.22*easeOutBack(inP)).toFixed(4); rot=(-1.9*(1-easeOutCubic(inP))).toFixed(2)+'deg'; break;
+      case 'slideL':
+        tr='translate3d('+(-70*(1-e)).toFixed(2)+'px,0,0)'; bl=(13*(1-e)).toFixed(2); break;
+      case 'type':
+        sc=(0.6+0.4*easeOutBack(inP)).toFixed(4); break;
+      case 'split':
+        tr='translate3d(0,'+(12*(1-e)).toFixed(2)+'px,0)'; break;
+      default: // fade
+        break;
+    }
+    if(dev==='split'){
+      var sp=o.it.split||{at:0.6,gap:60,dur:0.8};
+      var p=clamp((t-(o.it.t0+sp.at))/sp.dur,0,1);
+      var pe=p*p*(3-2*p);                       // smoothstep
+      var off=(sp.gap*pe).toFixed(2);
+      if(o.halfT) o.halfT.style.transform='translate3d(0,'+(-off)+'px,0)';
+      if(o.halfB) o.halfB.style.transform='translate3d(0,'+off+'px,0)';
+    }
+    if(outP>0){
+      var q=easeInCubic(outP);
+      op=(1-q).toFixed(3);
+      tr='translate3d(0,'+(-26*q).toFixed(2)+'px,0) '+tr;
+      bl=Math.max(parseFloat(bl||0), 9*q);
+      sc=(sc*(1-0.15*q)).toFixed(4);
+    }
+    el.style.opacity=op;
+    el.style.transform=tr;
+    el.style.filter=bl>0.01?('blur('+bl+'px)'):'none';
+    el.style.clipPath=cl||'none';
+    if(dev==='split'&&o.wrap) o.wrap.style.transform='scale('+sc+') rotate('+rot+')';
+    else tw.style.transform='scale('+sc+') rotate('+rot+')';
+    if(dev==='type'){
+      chars.forEach(function(c,i){
+        var d=i*0.035; var p=clamp((inP-d)/0.30,0,1);
+        c.style.opacity=p; c.style.transform='scale('+(0.55+0.45*easeOutBack(p)).toFixed(3)+')';
+      });
+    }
+    return true;
+  }
+
+  window.__seek=function(t){
+    items.forEach(function(o){o.el.style.opacity=0;o.el.style.transform='';o.el.style.filter='none';
+      o.el.style.clipPath='none';o.tw.style.transform='';
+      if(o.wrap) o.wrap.style.transform='';
+      if(o.halfT) o.halfT.style.transform='';
+      if(o.halfB) o.halfB.style.transform='';
+      o.chars.forEach(function(c){c.style.opacity='';c.style.transform='';});});
+    T.groups.forEach(function(g){
+      if(g.deadNow) return;             // 即时预览里刚删掉的组：文字层也立刻消失
+      var st={inStart:g.t0,inEnd:g.t0+IN,outStart:g.t1,outEnd:g.t1+OUT};
+      g.items.forEach(function(it){
+        var o=items.filter(function(x){return x.it===it;})[0];
+        var s2={inStart:Math.max(it.t0,g.t0),inEnd:Math.max(it.t0,g.t0)+IN,
+                outStart:Math.min(it.t1,g.t1),outEnd:Math.max(it.t1,g.t1)+OUT};
+        applyDevice(o,t,s2);
+      });
+    });
+    applyFx(t);
+    window.__T__=t;
+  };
+  window.__TOTAL__=T.meta.total;
+  window.__GROUPS__=T.groups;
+  window.__READY__=true;
+  window.__seek(0);
+
+  /* ================================================================
+     预览模式：URL 带 ?preview=1 才启用
+     - 生产渲染（render_frames.mjs）走不到这里，DOM 与之前完全一致
+     - 画面：原片做底（z-index 0）→ 渐变 5 → 圆形蒙版 10 → 文字 20
+     - 控件：空格播放/暂停 · ←→ 单帧 · Shift+←→ 1 秒 · ↑↓ 跳上/下一组大字 · Home/End 首尾
+     ================================================================ */
+  (function(){
+    var Q=new URLSearchParams(location.search);
+    if(!Q.get('preview')) return;
+    var FPS=T.meta.fps||30, stage=document.getElementById('stage');
+
+    /* ============ 逐字删除：时间重映射 ============
+       删掉一个词 = 这段视频消失、后面整体提前。
+       浏览器这边先「假装」剪好：文字时间整体前移，播放时视频跳过被删区间。
+       这样不用重切片子就能先看到最终效果。 */
+    var ROWS = T.meta.cuts || [];
+    var BASE_TOTAL = T.meta.total;
+    /* 重算「被删区间」+ 分段表；dels = [{s0,s1}] 原片时间。
+       全部按「帧」算 —— 必须和 apply_deletions.py（真正切片的那套）逐帧一致，
+       否则预览里看到的时间和成片对不上。 */
+    var IV = [], SEGS = [], NEW_TOTAL = BASE_TOTAL, _rm = 0;
+    function srcToOut(s){
+      for(var i=0;i<ROWS.length;i++){ var r=ROWS[i]; if(s>=r.src0-1e-6 && s<r.src1+1e-6) return r.out0+(s-r.src0); }
+      for(var i=0;i<ROWS.length;i++){ var r=ROWS[i]; if(r.src0>s) return r.out0; }
+      return ROWS.length? ROWS[ROWS.length-1].out1 : 0;
+    }
+    function srcToOutStrict(s){
+      for(var i=0;i<ROWS.length;i++){ var r=ROWS[i]; if(s>=r.src0-1e-6 && s<r.src1+1e-6) return r.out0+(s-r.src0); }
+      return null;
+    }
+    function recompute(dels, directOut){
+      IV = [];
+      /* 两类删除坐标不能混：
+         - 保存/重建用「原片时间」，要经过 cuts 行映射到老成片帧；
+         - 预览里点段删除用「当前预览视频时间」，必须直接当老成片帧。
+         混用会让画面跳错段，出现“字幕删了但这一段还在播”。 */
+      var df = (dels||[]).map(function(d){
+        if (directOut) return [Math.round(d.s0*FPS), Math.round(d.s1*FPS)];
+        return [Math.round(d.s0*FPS), Math.round(d.s1*FPS)];
+      });
+      df.forEach(function(x){
+        if (directOut) {
+          if (x[1] > x[0]) IV.push(x);
+        } else {
+          ROWS.forEach(function(r){
+            var a=Math.max(x[0], r.f0), b=Math.min(x[1], r.f1);
+            if(b>a){
+              var base=Math.round(r.out0*FPS);
+              IV.push([base+(a-r.f0), base+(b-r.f0)]);     // 被删掉的老成片帧区间
+            }
+          });
+        }
+      });
+      IV.sort(function(x,y){return x[0]-y[0];});
+      var m=[];
+      IV.forEach(function(x){
+        if(m.length && x[0]<=m[m.length-1][1]) m[m.length-1][1]=Math.max(m[m.length-1][1],x[1]);
+        else m.push([x[0],x[1]]);
+      });
+      IV=m;
+      var TOTALF = Math.round(BASE_TOTAL*FPS);
+      SEGS=[]; _rm=0;
+      var _o=0,_n=0;
+      for(var i=0;i<IV.length;i++){
+        var a=IV[i][0], b=IV[i][1];
+        if(a>_o){ SEGS.push({o0:_o,o1:a,n0:_n,n1:_n+(a-_o)}); _n+=a-_o; }
+        _rm += (b-a); _o=b;
+      }
+      SEGS.push({o0:_o,o1:TOTALF,n0:_n,n1:_n+(TOTALF-_o)});
+      NEW_TOTAL = (TOTALF-_rm)/FPS;
+      return IV;
+    }
+    function shiftBefore(f){ var d=0; for(var i=0;i<IV.length;i++){ if(IV[i][1]<=f) d+=IV[i][1]-IV[i][0]; else break; } return d; }
+    function oldToNew(t){
+      var o = Math.round(t*FPS);
+      for(var i=0;i<SEGS.length;i++){ var s=SEGS[i]; if(o>=s.o0 && o<s.o1) return (s.n0+(o-s.o0))/FPS; }
+      for(var i=0;i<IV.length;i++){ if(o>=IV[i][0] && o<IV[i][1]) return (IV[i][0]-shiftBefore(IV[i][0]))/FPS; }
+      for(var i=0;i<SEGS.length;i++){ var s2=SEGS[i]; if(o===s2.o1) return s2.n1/FPS; }
+      return (o-_rm)/FPS;
+    }
+    function newToOld(n){
+      var f = Math.round(n*FPS);
+      for(var i=0;i<SEGS.length;i++){ var s=SEGS[i]; if(f>=s.n0 && f<s.n1) return (s.o0+(f-s.n0))/FPS; }
+      return (f+_rm)/FPS;
+    }
+
+    recompute(T.meta.dels||[]);
+
+    /* 原始（未删）的时间轴 —— 每次改动都从这里重新算 */
+    var BASE = JSON.parse(JSON.stringify({groups:T.groups, fx:T.fx||[]}));
+    var TOTAL = NEW_TOTAL;
+
+    /* 原地改写 —— 不能替换对象：文字层的 DOM 已经绑在原对象上（items[].it / fxEls[].f），
+       换了对象就会「找不到对应的字块」。 */
+    function applyRemap(){
+      BASE.groups.forEach(function(bg, gi){
+        var g = T.groups[gi]; if (!g) return;
+        g.t0 = oldToNew(bg.t0); g.t1 = oldToNew(bg.t1);
+        var dead = (g.t1 - g.t0) < 0.06;
+        g.deadNow = dead;
+        bg.items.forEach(function(b, ii){
+          var it = g.items[ii]; if (!it) return;
+          it.t0 = oldToNew(b.t0); it.t1 = oldToNew(b.t1);
+          if (dead) { it.t0 = it.t1 = -99; }   // 整段删掉：永远不显示
+        });
+      });
+      BASE.fx.forEach(function(bf, fi){
+        var f = (T.fx||[])[fi]; if (!f) return;
+        f.t0 = oldToNew(bf.t0); f.t1 = oldToNew(bf.t1);
+        (bf.k||[]).forEach(function(bk, ki){ if (f.k && f.k[ki]) f.k[ki].t = oldToNew(bk.t); });
+      });
+      T.meta.total = TOTAL;
+      window.__TOTAL__ = TOTAL;
+    }
+    applyRemap();
+
+    /* --- 原片垫底 --- */
+    var vid=document.createElement('video');
+    vid.id='pv'; vid.muted=!!Q.get('mute'); vid.playsInline=true; vid.preload='auto';
+    vid.style.cssText='position:absolute;left:0;top:0;width:1080px;height:1920px;object-fit:cover;z-index:0';
+    vid.src=Q.get('src')||T.meta.previewSrc||'cut_raw.mp4';
+    stage.insertBefore(vid, stage.firstChild);
+    document.body.classList.add('preview');
+    document.title = (T.meta.title || 'EP') + ' · 动效预览';
+    stage.style.position='absolute'; stage.style.transformOrigin='top left';
+
+    /* --- 控件条 --- */
+    var bar=document.createElement('div'); bar.id='pvbar';
+    bar.innerHTML='<button id="pvplay" title="空格 播放/暂停">▶</button>'
+      +'<span id="pvtime">00:00.00 / 00:00.00</span>'
+      +'<div id="pvtrack"><div class="rail"></div><div id="pvcuts"></div><div id="pvticks"></div><div id="pvhead"></div></div>';
+    document.body.appendChild(bar);
+    var hint=document.createElement('div'); hint.id='pvhint';
+    hint.innerHTML='空格 播放/暂停 ｜ ←→ 单帧 ｜ Shift+←→ 1 秒<br>↑↓ 跳上/下一组大字 ｜ Home/End 首尾<br>点刻度跳转 · 黄柱=圆形蒙版';
+    document.body.appendChild(hint);
+
+    /* --- 刻度：每组大字一根（可点），每次蒙版转场一根黄柱 --- */
+    var ticks=bar.querySelector('#pvticks');
+    function drawTicks(){
+      ticks.innerHTML='';
+      T.groups.forEach(function(g){
+        if (g.deadNow) return;            // 整段删掉的：不再显示段块
+        // 蓝色段块 —— 两条分割线之间就是「一句话/一个短语」，点它就是选中这一段
+        var sb=document.createElement('div'); sb.className='seg'; sb.dataset.gid=g.id;
+        sb.style.left=(g.t0/TOTAL*100)+'%';
+        sb.style.width=Math.max(0.5,(g.t1-g.t0)/TOTAL*100)+'%';
+        var mt=g.items.filter(function(i){return i.role==='main'})[0];
+        sb.title=(mt?mt.text.replace(/\*/g,''):g.id)+'  '+g.t0.toFixed(2)+'–'+g.t1.toFixed(2)+'s';
+        ticks.appendChild(sb);
+        var d=document.createElement('div'); d.className='tick g';
+        d.style.left=(g.t0/TOTAL*100)+'%';
+        var m=g.items.filter(function(i){return i.role==='main'})[0];
+        d.title=g.id+'  '+(m?m.text.replace(/\*/g,''):'')+'   '+g.t0.toFixed(2)+'s';
+        d.onclick=function(e){ e.stopPropagation(); seek(g.t0); };
+        ticks.appendChild(d);
+      });
+      (T.fx||[]).forEach(function(f){
+        var d=document.createElement('div'); d.className='tick fx';
+        d.style.left=(f.t0/TOTAL*100)+'%';
+        d.title='圆形蒙版 '+f.id+'   '+f.t0.toFixed(2)+'–'+f.t1.toFixed(2)+'s';
+        d.onclick=function(e){ e.stopPropagation(); seek(f.t0+0.85); };
+        ticks.appendChild(d);
+      });
+    }
+    drawTicks();
+
+    var track=bar.querySelector('#pvtrack'), head=bar.querySelector('#pvhead'),
+        pbtn=bar.querySelector('#pvplay'), tel=bar.querySelector('#pvtime');
+    function fmt(t){ var m=Math.floor(t/60), s=t-m*60;
+      return String(m).padStart(2,'0')+':'+s.toFixed(2).padStart(5,'0'); }
+    function paint(t){ head.style.left=(t/TOTAL*100)+'%'; tel.textContent=fmt(t)+' / '+fmt(TOTAL); }
+    /* 时钟是「新成片时间」，视频被它牵着走 —— 这样删掉的片段一定跳得过去，
+       不会出现「字幕删了、画面还留着」的错位。 */
+    var clock = 0, lastNow = 0;
+    function seek(t){
+      t=Math.max(0,Math.min(TOTAL-0.001,t));
+      clock=t;
+      try{ vid.currentTime=newToOld(t); }catch(err){}
+      window.__seek(t); paint(t);
+    }
+    function tFromX(e){ var r=track.getBoundingClientRect();
+      return Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*TOTAL; }
+    function prevGroup(t){ var g=null; T.groups.forEach(function(x){ if(x.t0<t-0.02) g=x; }); return g?g.t0:0; }
+    function nextGroup(t){ for(var i=0;i<T.groups.length;i++){ if(T.groups[i].t0>t+0.02) return T.groups[i].t0; } return TOTAL-0.05; }
+
+    /* 段模式下：按下不立刻 seek（否则播放头先跳到点击处，段永远选不中）；
+       只有真的拖动（>4px）才当擦洗用。普通模式下保持「按一下就跳」。 */
+    var dragging=false, dragX0=0, dragMoved=false;
+    function segModeOn(){ return document.body.classList.contains('segmode'); }
+    track.addEventListener('mousedown',function(e){
+      dragging=true; dragX0=e.clientX; dragMoved=false;
+      if(!segModeOn()) seek(tFromX(e));
+    });
+    window.addEventListener('mousemove',function(e){
+      if(!dragging) return;
+      if(segModeOn()){
+        if(Math.abs(e.clientX-dragX0)>4){ dragMoved=true; seek(tFromX(e)); }
+      } else seek(tFromX(e));
+    });
+    window.addEventListener('mouseup',function(){ dragging=false; });
+    pbtn.onclick=function(){ vid.paused? vid.play() : vid.pause(); };
+    vid.addEventListener('play',function(){ pbtn.textContent='❚❚'; });
+    vid.addEventListener('pause',function(){ pbtn.textContent='▶'; });
+    vid.addEventListener('seeked',function(){ window.__seek(clock); paint(clock); });
+    vid.addEventListener('error',function(){
+      if(document.getElementById('pverr')) return;
+      var m=document.createElement('div'); m.id='pverr';
+      m.innerHTML='找不到视频：<b>'+(vid.currentSrc||vid.src||Q.get('src')||'(空)')+'</b><br>'
+        +'用 <b>?src=&lt;文件地址&gt;</b> 指定（例如 ?src=file:///Users/…/cut_raw.mp4）';
+      document.body.appendChild(m);
+    });
+    window.addEventListener('keydown',function(e){
+      if(e.target && e.target.tagName==='INPUT') return;
+      var t=clock;
+      if(e.key===' '){ vid.paused? vid.play():vid.pause(); e.preventDefault(); }
+      else if(e.key==='ArrowLeft'){ seek(t-(e.shiftKey?1:1/FPS)); e.preventDefault(); }
+      else if(e.key==='ArrowRight'){ seek(t+(e.shiftKey?1:1/FPS)); e.preventDefault(); }
+      else if(e.key==='ArrowUp'){ seek(prevGroup(t)); e.preventDefault(); }
+      else if(e.key==='ArrowDown'){ seek(nextGroup(t)); e.preventDefault(); }
+      else if(e.key==='Home'){ seek(0); }
+      else if(e.key==='End'){ seek(TOTAL-0.05); }
+    });
+
+    /* --- 视频驱动：视频就是时钟，只有「跨过被删区间」时才 seek 一次 ---
+       时钟 = 视频时间 - 已经跳过的时长（纯函数算，不做累加，不会漂、不会反复 seek） */
+    /* ⚠️ IV 存的是「帧号」，视频时间是「秒」——比较前必须先换算，否则永远对不上 */
+    function removedBefore(v){
+      var f=Math.round(v*FPS), d=0;
+      for(var i=0;i<IV.length;i++){ if(IV[i][1]<=f) d+=(IV[i][1]-IV[i][0])/FPS; }
+      return d;
+    }
+    function loop(){
+      if(!vid.paused && vid.readyState>=2){
+        var v=vid.currentTime, f=Math.round(v*FPS), hit=null;
+        for(var i=0;i<IV.length;i++){ if(f>=IV[i][0]-1 && f<IV[i][1]-1){ hit=IV[i]; break; } }
+        if(hit){ try{ vid.currentTime=hit[1]/FPS; }catch(e){} }   // 撞到被删的段：跳过去
+        clock = Math.max(0, Math.min(TOTAL, vid.currentTime - removedBefore(vid.currentTime)));
+        if(clock>=TOTAL-0.001){ try{ vid.pause(); }catch(e){} }
+        window.__seek(clock);
+      }
+      paint(clock);
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    /* --- 重建中的弹窗（挡住界面，避免和后台任务冲突）--- */
+    var busy=document.createElement('div'); busy.id='segbusy';
+    busy.innerHTML='<div class="box"><b>正在重建…</b>'
+      +'<p id="segbusymsg">切片子 → 纯人声版 → 逐帧文字层 → 配乐音效 → 合成</p>'
+      +'<pre id="segbusylog"></pre>'
+      +'<small>重建期间不能修改（会和后台任务打架）。完成会自动刷新。</small></div>';
+    document.body.appendChild(busy);
+
+    window.__pvToast=function(msg,ms){
+      var t=document.getElementById('pvtoast');
+      if(!t){ t=document.createElement('div'); t.id='pvtoast'; document.body.appendChild(t); }
+      t.textContent=msg; t.classList.add('on');
+      clearTimeout(t._h); t._h=setTimeout(function(){ t.classList.remove('on'); }, ms||2800);
+    };
+
+    /* --- 缩放到窗口里，控件条留在最下 --- */
+    function fit(){
+      var h=window.innerHeight-78-(document.body.classList.contains('segmode')?52:0), w=window.innerWidth;
+      var s=Math.min(w/1080, h/1920);
+      stage.style.transform='scale('+s+')';
+      stage.style.left=((w-1080*s)/2)+'px';
+      stage.style.top=((h-1920*s)/2)+'px';
+    }
+    window.addEventListener('resize',fit); fit();
+    window.__PV={ vid:vid, seek:seek, paint:paint,
+      get total(){ return TOTAL; },
+      get clock(){ return clock; },
+      stageScale:function(){ var m=/scale\(([\d.]+)\)/.exec(stage.style.transform||''); return m?parseFloat(m[1]):1; },
+      /* 逐字删除用的接口 */
+      rm: { oldToNew:oldToNew, newToOld:newToOld, srcToOut:srcToOut,
+            srcToOutStrict:srcToOutStrict, rows:ROWS,
+            get iv(){ return IV; },
+            get newTotal(){ return NEW_TOTAL; },
+            baseGroupRange:function(id){
+              var bg=BASE.groups.find(function(g){ return g.id===id; });
+              return bg ? { t0:bg.t0, t1:bg.t1 } : null;
+            },
+            setDels:function(dels){ recompute(dels,false); TOTAL=NEW_TOTAL; applyRemap(); drawTicks(); seek(clock); },
+            setOutDels:function(dels){ recompute(dels,true); TOTAL=NEW_TOTAL; applyRemap(); drawTicks(); seek(clock); } },
+      chars: T.meta.chars || null,
+      /* 重建时锁住编辑界面 */
+      lock:function(on,msg){
+        document.body.classList.toggle('locked',!!on);
+        if(on){ if(msg) document.getElementById('segbusymsg').textContent=msg; busy.classList.add('on'); }
+        else busy.classList.remove('on');
+      },
+      busyLog:function(txt){ var e=document.getElementById('segbusylog'); if(e){ e.textContent=txt||''; e.scrollTop=e.scrollHeight; } }
+    };
+    seek(0);
+  })();
+})();
+</script>
+<script src="preview.js"></script>
+<script src="segmode.js"></script>
+</body>
+</html>
