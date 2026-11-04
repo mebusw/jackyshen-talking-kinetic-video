@@ -1,4 +1,4 @@
-# Social-media-savvy-talking-head-kinetic-video
+# jackyshen-talking-kinetic-video
 
 **网感口播动效视频编辑器**
 
@@ -14,29 +14,29 @@
 ## 安装
 
 ```bash
-git clone https://github.com/mebusw/Social-media-savvy-talking-head-kinetic-video.git \
-  "$HOME/.agents/skills/social-media-savvy-talking-head-kinetic-video"
-cd "$HOME/.agents/skills/social-media-savvy-talking-head-kinetic-video"
+git clone https://github.com/mebusw/jackyshen-talking-kinetic-video.git \
+  "$HOME/.agents/skills/jackyshen-talking-kinetic-video"
+cd "$HOME/.agents/skills/jackyshen-talking-kinetic-video"
 npm install
 ```
 
 安装后使用：
 
 ```text
-$social-media-savvy-talking-head-kinetic-video
+$jackyshen-talking-kinetic-video
 ```
 
 ## 新建项目
 
 ```bash
-python3 "$HOME/.agents/skills/social-media-savvy-talking-head-kinetic-video/scripts/create_project.py" \
+python3 "$HOME/.agents/skills/jackyshen-talking-kinetic-video/scripts/create_project.py" \
   "/absolute/path/to/EPxx" --title "EPxx 标题"
 ```
 
 ## 预览
 
 ```bash
-node "$HOME/.agents/skills/social-media-savvy-talking-head-kinetic-video/engine/preview_server.mjs" \
+node "$HOME/.agents/skills/jackyshen-talking-kinetic-video/engine/preview_server.mjs" \
   --project "/absolute/path/to/EPxx"
 ```
 

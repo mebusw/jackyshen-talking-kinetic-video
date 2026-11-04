@@ -1,5 +1,5 @@
 ---
-name: social-media-savvy-talking-head-kinetic-video
+name: jackyshen-talking-kinetic-video
 description: 剪辑真人口播短视频并制作网感动效文字、跟读字幕、圆形蒙版转场、浏览器内预览编辑和按段删除重建。用于“真人口播动效视频”“网感口播”“动态大字”“预览后重剪”等任务；不用于横屏宣传片、纯字幕视频或没有真人素材的纯动效短片。
 metadata:
   short-description: 网感口播动效视频编辑器
@@ -16,7 +16,7 @@ metadata:
 设 `<skill-dir>` 为包含本 `SKILL.md` 的目录。标准安装位置是：
 
 ```text
-$HOME/.agents/skills/social-media-savvy-talking-head-kinetic-video
+$HOME/.agents/skills/jackyshen-talking-kinetic-video
 ```
 
 共享资源固定从 skill 读取：

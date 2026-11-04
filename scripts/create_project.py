@@ -67,7 +67,7 @@ def preview_script(skill_dir: Path) -> str:
 set -e
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SKILL_DIR="${{KINETIC_SKILL_DIR:-$HOME/.agents/skills/social-media-savvy-talking-head-kinetic-video}}"
+SKILL_DIR="${{KINETIC_SKILL_DIR:-$HOME/.agents/skills/jackyshen-talking-kinetic-video}}"
 if [ ! -f "$SKILL_DIR/SKILL.md" ]; then
   SKILL_DIR="{skill_dir}"
 fi

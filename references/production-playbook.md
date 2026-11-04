@@ -2,7 +2,7 @@
 
 # 生产手册 — 真人口播网感视频制作规范
 
-> 本文件是 `social-media-savvy-talking-head-kinetic-video` skill 的详细生产手册。
+> 本文件是 `jackyshen-talking-kinetic-video` skill 的详细生产手册。
 > 
 > 规定内容剪辑、视觉风格、字幕动效、共享资源、本机公共引擎、渲染流程和交付标准。
 > 
@@ -2111,7 +2111,7 @@ open_in_codex({
 #!/bin/zsh
 set -e
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SKILL_DIR="${KINETIC_SKILL_DIR:-$HOME/.agents/skills/social-media-savvy-talking-head-kinetic-video}"
+SKILL_DIR="${KINETIC_SKILL_DIR:-$HOME/.agents/skills/jackyshen-talking-kinetic-video}"
 exec node "$SKILL_DIR/engine/preview_server.mjs" --project "$PROJECT_DIR"
 ```
 
