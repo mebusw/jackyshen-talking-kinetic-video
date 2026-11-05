@@ -9,6 +9,7 @@ import json
 # ============================ 本集配置 ============================
 NAME = "EP00-标题-口播动效版"
 RAW  = 0.0        # 原片时长（秒）
+SRC_NAME = "原片.mov"   # 只为文档里好看
 TITLE = "EP00 标题"
 # 校订后的口播文本：一组一句，顺序与 plan.py 的 GROUPS 一致
 TEXT = [
@@ -21,6 +22,9 @@ CLEANUP = [
 ]
 # 源片 vs 成片对照：| 剪掉的段 | 源时间码 | 为什么 |
 CUTS_TABLE = [
+]
+# 表格后面的补充说明（markdown 原文，每行一条）
+NOTES = [
 ]
 # ================================================================
 
@@ -56,7 +60,8 @@ print("srt", len(PAIRS), "条")
 TOT = cuts["total"]
 md = [f"# {TITLE} 口播稿（校订版）", "",
  f"- 成片时长 **{TOT:.2f}s**（{cuts['nframes']} 帧 @30fps，1080×1920）",
- f"- 原片 {RAW:.2f}s → 剪掉 **{RAW-TOT:.2f}s（{(RAW-TOT)/RAW*100:.1f}%）", "",
+ f"- 原片 `{SRC_NAME}` {RAW:.2f}s → 剪掉 **{RAW-TOT:.2f}s（{(RAW-TOT)/RAW*100:.1f}%）",
+ f"- 剪完 **{TOT:.2f}s**（≈{round(TOT)} 秒）", "",
  "## 清理清单", "| 类型 | 内容 | 处理 |", "|---|---|---|"]
 md += [f"| {a} | {b} | {c} |" for a, b, c in CLEANUP]
 md += ["", "## 逐句（成片时间码）", ""]
@@ -65,8 +70,10 @@ for i, (r, t, d) in enumerate(PAIRS, 1):
 if DEAD:
     md += ["", "> 预览里被删掉的组（原组号 %s）已从成片移除。" % ", ".join(f"{i+1:02d}" for i in DEAD)]
 md += ["", "## 术语校订", "| ASR 误识 | 校订 |", "|---|---|"]
-md += [f"| {a} | **{b}** |" for a, b in TERMS]
-md += ["", "## 源片 vs 成片对照", "| 剪掉的段 | 源时间码 | 为什么 |", "|---|---|---|"]
+md += [f"| {a} | {b if '**' in b else '**' + b + '**'} |" for a, b in TERMS]
+if NOTES:
+    md += [""] + NOTES + [""]
+md += ["## 源片 vs 成片对照", "| 剪掉的段 | 源时间码 | 为什么 |", "|---|---|---|"]
 md += [f"| {a} | {b} | {c} |" for a, b, c in CUTS_TABLE]
 open("口播稿.md", "w").write("\n".join(md))
 print("口播稿.md ok")
