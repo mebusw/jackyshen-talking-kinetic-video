@@ -44,7 +44,7 @@
     + '<span class="sep"></span>'
     + '<button id="cvquote" title="把选中内容复制到对话">引用</button>'
     + '<button id="cvsave">保存</button>'
-    + '<button id="cvrebuild" class="primary">重建</button>'
+    + '<button id="cvrebuild" class="primary" title="按当前时间轴重新剪出成片（含文字层、配乐音效）">重建所有修改</button>'
     + '<span class="info" id="cvinfo"></span>'
     + '</div>'
     + '<canvas id="cvcanvas"></canvas>'

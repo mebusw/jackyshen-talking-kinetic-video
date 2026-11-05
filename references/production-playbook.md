@@ -2178,6 +2178,19 @@ exec node "$SKILL_DIR/engine/preview_server.mjs" --project "$PROJECT_DIR"
 
 删一整段时，取这一组所有行（`gid` 相同的 rows）里 `src0` 的最小值到 `src1` 的最大值作为原片区间 —— 组内的气口一并删掉，这是想要的效果。
 
+> ⚠️ **`plan.py` 必须写 `gid` 和 `groups`，否则「删掉这一段」会静默失灵**（2026-11-05 实测）。
+> - 每行 row 加一个 `gid`：该行属于第几组（**0 基**的组号）；片头/组间气口/片尾这些不属于任何组的行写 `-1`。
+> - `cuts.json` 顶层加一个 `groups`：`[{"i": 0, "out0": …, "out1": …}, …]`，顺序就是组序。
+>
+> `gid` 缺了的话，`segmode.js` 的 `groupRange()` 找不到这一组对应的行，会直接 `return` —— 点了「删掉这一段」
+> 什么都不发生，也不报错。`groups` 缺了的话，`apply_deletions.py` 重建出来的分组是空的，字幕/切片会整体错位。
+>
+> **每集开工前先自检这两条**：
+> ```python
+> json.load(open("cuts.json"))["rows"][3]["gid"]          # 应为整数
+> len(json.load(open("cuts.json"))["groups"]) == 32       # 应等于组数
+> ```
+
 #### 时间映射的语义（预览和重建必须一模一样）
 
 删掉一段视频 = 这段消失，后面整体提前：

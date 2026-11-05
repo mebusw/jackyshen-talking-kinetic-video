@@ -115,7 +115,12 @@ for r in rows:
     cuts_in = [(x, y) for x, y in df if x < r1 and y > r0]
     if not cuts_in:
         n = r1 - r0
-        new_rows.append(dict(r))
+        # 这一行整段保留，但成片时间要跟着前面被删的部分前移 —— 不更新的话，
+        # 删点之后的行会留着「删之前的」out0/out1，
+        # 浏览器预览的 src→out 映射、字幕时间码、音效落点会整体错位。
+        nr = dict(r)
+        nr.update(out0=new_out / FPS, out1=(new_out + n) / FPS)
+        new_rows.append(nr)
         segs.append((base_old, base_old + n, new_out, new_out + n))
         old_out += n; new_out += n
         continue

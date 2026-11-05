@@ -26,7 +26,7 @@
     + '<button id="segdel" class="danger">删掉这一段</button>'
     + '<button id="segundo" title="撤销最近一次删除（会自动保存）">撤销上一次删除</button>'
     + '<button id="segquote" title="把这一段复制到剪贴板，粘到对话里继续改">引用</button>'
-    + '<button id="segrebuild" class="primary" title="保存删除清单并重新剪出成片">保存并重建</button>';
+    + '<button id="segrebuild" class="primary" title="保存删除清单并重新剪出成片（含文字层、配乐音效）">重建所有修改</button>';
   document.body.appendChild(sb);
   const cutBox = document.getElementById('pvcuts');
 
@@ -116,13 +116,16 @@
 
   function doDelete() {
     const g = group();
-    if (!g) return;
+    if (!g) { window.__pvToast && window.__pvToast('先选中一段再删'); return; }
     const r = groupRange(g.id);
-    if (!r) return;
+    if (!r) {
+      window.__pvToast && window.__pvToast('这一段找不到对应的原片区间（cuts.json 里缺 gid），删不了');
+      return;
+    }
     /* 保存/重建要的是原片时间；即时预览要的是当前预览视频时间。
        必须从 BASE 取，不能用已经被前几次预览删除平移过的 g.t0/t1。 */
     const pv = RM.baseGroupRange(g.id);
-    if (!pv) return;
+    if (!pv) { window.__pvToast && window.__pvToast('这一段没有基准时间范围，删不了'); return; }
     const main = (g.items.find(i => i.role === 'main') || { text: g.id }).text.replace(/\*/g, '');
     DELS.push({ s0: r.s0, s1: r.s1, pv0: pv.t0, pv1: pv.t1,
       label: main, oldT0: pv.t0, oldT1: pv.t1, gid: g.id });
