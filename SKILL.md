@@ -51,10 +51,24 @@ EPxx/
 ├── renders/          纯人声版、最终成片
 ├── clips/            分段切片
 ├── qa/               抽帧与检查
+├── plan.py           剪辑计划（切片 + 视觉设计）  ← 模板
+├── mktimeline.py     时间轴                        ← 模板
+├── mkaudio.py        配乐音效                      ← 模板
+├── mkpure.py         纯人声版                      ← 模板
+├── mkclips.py        分段切片                      ← 模板
+├── mkdocs.py         口播稿 / 打点表 / 字幕         ← 模板
+├── make_final.sh     重建脚本                      ← 模板
 ├── timeline.json     本集内容
 ├── preview.sh        启动共享预览服务
 └── .gitignore
 ```
+
+带 ← 模板 的几份是从 `<skill-dir>/templates/` 拷来的**每集脚本**（要按本集内容改，所以不能共享）。
+**不要凭记忆重写它们** —— 模板里已经修掉了几个会静默出错的坑，最要紧的一条：
+`plan.py` 必须给 `cuts.json` 的每一行写 `gid`、并在顶层写 `groups`，
+少了这两样，预览里的「删掉这一段」会点了没反应、也不报错。
+
+模板改了之后要同步回 `<skill-dir>/templates/`；用法见 `templates/README.md`。
 
 不要生成或依赖项目级 `AGENTS.md`。通用规则由本 skill 维护。
 
@@ -78,7 +92,23 @@ node "<skill-dir>/engine/render_frames.mjs" --project "/absolute/path/to/EPxx" \
 
 项目自己的 `rebuild.sh` / `make_final.sh` 负责切片、纯人声版、文字层、音频和合成。脚本里调用引擎时必须指向 `<skill-dir>/engine/...`，不能依赖项目内副本。
 
-按段删除的完整链路必须先读 production playbook 的“预览模式与 Codex 交付”和“构建与质量检查”两节。预览删除后要立即在浏览器里跳过对应视频区间；保存并重建期间必须锁住编辑界面。
+`apply_deletions.py` 也在公共引擎里，**不用往项目里拷**：
+
+```bash
+python3 "<skill-dir>/engine/apply_deletions.py" --project "/absolute/path/to/EPxx"
+```
+
+重建的顺序是固定的，不能改：
+
+```text
+plan.py → mktimeline.py → apply_deletions.py → 清空 deletions.json
+→ 切原片 → 纯人声版 → build.mjs → 逐帧文字层 → 配乐音效 → 合成
+```
+
+按段删除的完整链路必须先读 production playbook 的“预览模式与 Codex 交付”和“构建与质量检查”两节。预览删除后要立即在浏览器里跳过对应视频区间；重建期间必须锁住编辑界面。
+
+预览里有三个编辑入口（✎ 文字 / 段 / 字），它们的主按钮都叫**「重建所有修改」**：
+点一次就把当前所有修改（文字、删掉的段）固化进成片。文字改完当场就能看到效果，不必等重建。
 
 ## 声音
 

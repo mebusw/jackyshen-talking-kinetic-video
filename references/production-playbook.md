@@ -1430,13 +1430,25 @@ project/
 | `segmode.js` | 按段模式（时间段块 / 选段 / 删除 / 引用 / 保存 / 重建） |
 | `build.mjs` | timeline.json → timeline.js + 预检；顺带把 chars/cuts/dels 编进去 |
 | `preview_server.mjs` | 本地预览服务（静态 + /api/save + /api/rebuild + /api/progress） |
-| `apply_deletions.py` | 把删掉的词扣到 cuts.json + timeline.json（通用，不含集数） |
+| `apply_deletions.py` | 把删掉的词扣到 cuts.json + timeline.json（通用，不含集数）。加 `--project <目录>` 可以直接对项目操作，**不用往项目里拷一份** |
 | `render_frames.mjs` | 逐帧渲染透明文字层 |
 | `示例-时间轴-含split.json` | split 动效的参考时间轴 |
 | `assets/NotoSansSC-Var.ttf` | 主字幕与大字字体 |
 | `assets/brush.ttf` | 手写体 |
 
 每集自己保留的：`plan.py` / `mktimeline.py` / `mkchars.py` / `mkpure.py` / `mkaudio.py` / `mkclips.py` / `mkdocs.py` / `mkpoint.py` / `rebuild.sh`。
+
+**这些脚本从 `<skill-dir>/templates/` 拷**（`create_project.py` 会自动拷），**不要凭记忆重写** ——
+模板里已经修掉了几个会静默出错的坑：
+
+| 坑 | 表现 | 模板里怎么修的 |
+|---|---|---|
+| `cuts.json` 缺 `gid` / `groups` | 预览里点「删掉这一段」没反应，也不报错 | `plan.py` 给每行写 `gid`、顶层写 `groups` |
+| `mktimeline.py` 不带旧文字 | 重建一次，预览里刚改好的字被冲回原文 | 沿用上一版 `timeline.json` 里的 text/size/dy |
+| 音效落点用成片秒数 | 删掉前面一段后，后面的音效整体错位 | `mkaudio.py` 用**原片时间**写落点，运行时映射 |
+| `mkdocs.py` 用行序对齐 | 删段后行会消失，字幕/打点整体错位 | 按 `gid` 取，跳过被删的组 |
+| 重建不接 `apply_deletions.py` | 删了也白删，重建又剪回来 | `make_final.sh` 固定顺序 + 扣完清空 `deletions.json` |
+| `renders/` 建得太晚 | 新工程第一次重建就崩 | `make_final.sh` 开头就建好输出目录 |
 
 ## 15. 本地工作区与坚果云同步
 
@@ -2131,8 +2143,12 @@ exec node "$SKILL_DIR/engine/preview_server.mjs" --project "$PROJECT_DIR"
 |改位置|拖动字块（**只动被拖的那一行**，大字和下面的小字各自独立）|
 |改大小|拖动字块右下角的小方块|
 |引用到对话|点「引用到对话」，把这一组的文字/字号/位置/动效/时间码复制到剪贴板，粘到对话里继续改|
-|保存|点「保存并重建」→ 写回 `timeline.json` → 自动跑 `build.mjs`|
+|重建所有修改|写回 `timeline.json` → 跑完整流水线重新出片（约 5–8 分钟）。重建期间锁住编辑界面|
 
+- **文字改完当场就能看到效果，不用重建** —— 文本框输入时直接改 DOM 并重算动画。
+  面板里有一行小字写着这件事，避免用户以为必须重建才能看到。
+- 按钮叫「重建所有修改」而不是「保存」：它固化的是**所有**修改（文字、位置、删掉的段），
+  不是只存一份 `timeline.json`。三个编辑器（✎ 文字 / 段 / 字）的主按钮口径一致。
 - 编辑器只改 `timeline.json`，不动 `index.html`。
 - 每次保存留一份 `.bak`。
 - **两行字是各自独立的**：大字上移不会带着小字走（小字的基准位置由大字字号决定，但拖动量记在各自身上）。
@@ -2160,7 +2176,7 @@ exec node "$SKILL_DIR/engine/preview_server.mjs" --project "$PROJECT_DIR"
 |点|做法|
 |---|---|
 |删除的视觉反馈|时间轴上留一道**红色斜纹切痕**（`#pvcuts`），宽度就是被删掉的那一截；底部提示行再列一个红色标签「✕ 某段 3.0s」|
-|保存 / 重建|合成**一个**按钮「保存并重建」——点一次就存清单 + 重出成片。分开两个按钮纯属啰嗦|
+|保存 / 重建|合成**一个**按钮「重建所有修改」——点一次就存清单 + 重出成片。分开两个按钮纯属啰嗦。文字编辑面板里的按钮也叫这个名字|
 |撤销|只撤「最近一次删除」，**不管删没删过都只是内存里的待删清单**；撤销后会自动写回 `deletions.json`，不会和磁盘上的旧清单打架。没有可撤时按钮是灰的|
 |引用|复制到剪贴板 + 屏幕中下方弹一条 toast「已复制引用 · 粘贴到对话框里就能继续改」。网页没法直接往 Codex 对话框里写，只能走剪贴板|
 |播放头|红色、比蓝色段块高（34px vs 13px），并且带一个三角头。拖播放头不会被误判成点段|
@@ -2204,10 +2220,16 @@ exec node "$SKILL_DIR/engine/preview_server.mjs" --project "$PROJECT_DIR"
 #### 重建的顺序（不能改）
 
 ```
-plan.py          → 基线 cuts.json
-mktimeline.py    → 基线 timeline.json
+plan.py          → 基线 cuts.json（带 gid + groups）
+mktimeline.py    → 基线 timeline.json（沿用上一版改过的文字/字号/Y）
 apply_deletions.py → 扣掉删除 → cuts.json + timeline.json + cut_fast.filter → 立刻清空 deletions.json
 切原片 → 纯人声版 → build.mjs → 逐帧文字层 → 配乐音效 → 合成
+```
+
+`apply_deletions.py` 从公共引擎调用，不必往项目里拷：
+
+```bash
+python3 "<skill-dir>/engine/apply_deletions.py" --project "/absolute/path/to/EPxx"
 ```
 
 - `apply_deletions.py` 必须在 `mktimeline.py` **之后**跑（它要同时改两份文件）。

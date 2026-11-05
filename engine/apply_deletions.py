@@ -5,6 +5,9 @@
     python3 apply_deletions.py            # 基线：cuts.json + timeline.json 就地改写
     python3 apply_deletions.py --fast     # 额外产出 cut_fast.filter（从 cut_raw.mp4 再切一刀，快 5 倍）
 
+也可以直接从 skill 的公共引擎跑，不用往项目里拷一份：
+    python3 "<skill-dir>/engine/apply_deletions.py" --project "/绝对路径/EPxx"
+
 输入
     cuts.json       基线切片（每行是原片的一帧区间）
     deletions.json  {"dels":[{"s0":12.30,"s1":13.10}]}   —— 原片时间（秒），互不重叠
@@ -24,7 +27,6 @@
 """
 import json, os, sys, argparse, math
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
 def fr(x):
     """四舍五入（和 JS 的 Math.round 一致，不用 Python 的银行家舍入）"""
     return int(math.floor(x + 0.5))
@@ -34,7 +36,13 @@ ap = argparse.ArgumentParser()
 ap.add_argument('--fast', action='store_true', help='额外产出 cut_fast.filter（从 cut_raw.mp4 再切）')
 ap.add_argument('--cutraw', default='cut_raw.mp4')
 ap.add_argument('--src', default=None, help='原片路径（写进 cut.filter 的注释用）')
+ap.add_argument('--project', default=None,
+                help='项目目录（默认 = 本脚本所在目录）。'
+                     '从 skill 的 engine 目录直接跑时用这个参数，就不用往项目里拷一份')
 args = ap.parse_args()
+ROOT = os.path.abspath(args.project) if args.project else os.path.dirname(os.path.abspath(__file__))
+if not os.path.isdir(ROOT):
+    sys.exit('项目目录不存在：%s' % ROOT)
 
 
 def load(name, default=None):

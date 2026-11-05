@@ -5,10 +5,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 from pathlib import Path
 
 
 PROJECT_DIRS = ("source", "renders", "clips", "qa")
+
+# 每集自己一份的剪辑脚本（要按本集内容改，所以不能共享）。
+# 从 skill 的 templates/ 拷 —— 别凭记忆重写，那几份脚本里踩过的坑不要再踩一遍。
+TEMPLATE_FILES = ("plan.py", "mktimeline.py", "mkaudio.py", "mkpure.py",
+                  "mkclips.py", "mkdocs.py", "make_final.sh")
 
 
 def starter_timeline(title: str) -> dict:
@@ -100,6 +106,19 @@ def main() -> None:
             encoding="utf-8",
         )
 
+    templates_dir = skill_dir / "templates"
+    for name in TEMPLATE_FILES:
+        src = templates_dir / name
+        dst = project / name
+        if not src.exists():
+            continue
+        if dst.exists():
+            print(f"保留已有 {name}：{dst}")
+            continue
+        shutil.copyfile(src, dst)
+        if name.endswith(".sh"):
+            dst.chmod(0o755)
+
     preview_path = project / "preview.sh"
     preview_path.write_text(preview_script(skill_dir), encoding="utf-8")
     preview_path.chmod(0o755)
@@ -130,6 +149,8 @@ def main() -> None:
     print(f"TIMELINE={timeline_path}")
     print(f"PREVIEW={preview_path}")
     print("共享引擎、音乐库和音效库均未复制；项目直接复用 skill 目录。")
+    print("已拷入剪辑脚本模板：" + "、".join(TEMPLATE_FILES))
+    print("下一步：改 plan.py / mktimeline.py / mkaudio.py / mkpure.py / mkclips.py / mkdocs.py / make_final.sh 的「本集配置」区。")
 
 
 if __name__ == "__main__":

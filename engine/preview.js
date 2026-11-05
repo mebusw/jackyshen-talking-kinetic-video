@@ -24,8 +24,9 @@
   + '<div class="row"><label>字号</label><input id="pvsize" type="number" min="30" max="200" step="2">'
   + '<button id="pvhi" title="把选中的字变成高亮">高亮选中</button></div>'
   + '<div class="row"><label>Y</label><input id="pvy" type="number" step="5">'
-  + '<button id="pvsave">保存并重建</button></div>'
+  + '<button id="pvsave" title="把当前修改固化进成片：重新剪片、重出文字层、重配音乐音效">重建所有修改</button></div>'
   + '<div class="row"><button id="pvquote" style="flex:1">引用到对话</button></div>'
+  + '<div class="hint">文字改完当场就能看到效果，不用重建 —— 重建只是把改动固化进成片。</div>'
   + '<div class="msg" id="pvmsg"></div>';
   document.body.appendChild(panel);
 
@@ -124,17 +125,47 @@
 
   document.getElementById('pvclose').onclick = deselect;
 
-  /* ---------- 4. 保存 ---------- */
+  /* ---------- 4. 保存 + 重建所有修改 ----------
+     文字改完当场就能看到效果（applyText 直接改 DOM）。
+     这个按钮负责把改动「固化」：写回 timeline.json → 跑完整流水线重新出片。
+     重建期间锁住编辑界面（PV.lock），否则后台在剪片、前台还在改，两边打架。 */
   document.getElementById('pvsave').onclick = async () => {
     const msg = document.getElementById('pvmsg');
+    if (document.body.classList.contains('locked')) { msg.textContent = '正在重建，等它结束'; return; }
+    PV.lock(true, '切片子 → 纯人声版 → 逐帧文字层 → 配乐音效 → 合成（约 5–8 分钟）');
     msg.textContent = '保存中…';
     try {
       const r = await fetch('/api/save', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ file: 'timeline.json', data: T }) });
       const j = await r.json();
-      msg.textContent = '已保存 ✅ ' + (j.build || '');
+      if (!j.ok) { PV.lock(false); msg.textContent = '保存失败：' + JSON.stringify(j); return; }
+      msg.textContent = '已保存，正在重建…';
+      const rr = await fetch('/api/rebuild', { method: 'POST', body: '{}' });
+      const rj = await rr.json();
+      if (rj.busy) { PV.lock(false); msg.textContent = '已有一个重建在跑，等它结束'; return; }
+      let last = '';
+      const t0 = Date.now();
+      while (Date.now() - t0 < 40 * 60 * 1000) {
+        await new Promise(res => setTimeout(res, 1500));
+        let pr = null;
+        try { pr = await (await fetch('/api/progress')).json(); } catch (e) { continue; }
+        if (pr && pr.log) {
+          const lines = pr.log.trim().split('\n');
+          const tail = lines[lines.length - 1] || '';
+          if (tail !== last) { last = tail; PV.busyLog(lines.slice(-14).join('\n')); }
+        }
+        if (pr && pr.running === false && pr.log && /==== 结束/.test(pr.log)) {
+          PV.lock(false);
+          msg.textContent = '重建完成，正在刷新…';
+          setTimeout(() => location.reload(), 700);
+          return;
+        }
+      }
+      PV.lock(false);
+      msg.textContent = '重建超时，看 .rebuild.log';
     } catch (e) {
-      msg.textContent = '保存失败：需要 preview_server（' + e.message + '）';
+      PV.lock(false);
+      msg.textContent = '重建失败：' + e;
     }
   };
 
